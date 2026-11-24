@@ -12,19 +12,40 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [entries, setEntries] = useState<ProgressionEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/auth/login');
+      // First try to get user from localStorage
+      const storedSession = localStorage.getItem('sb-session');
+      const storedUser = localStorage.getItem('sb-user');
+
+      if (!storedSession || !storedUser) {
+        setAuthError(true);
+        setLoading(false);
         return;
       }
 
-      setUser(user);
-      await loadEntries(user.id);
+      try {
+        const session = JSON.parse(storedSession);
+        const userData = JSON.parse(storedUser);
+        
+        // Set the session in Supabase client
+        if (session.access_token) {
+          await supabase.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          });
+        }
+
+        setUser(userData);
+        await loadEntries(userData.id);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setAuthError(true);
+        setLoading(false);
+      }
     };
 
     checkAuth();
@@ -49,6 +70,8 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('sb-session');
+    localStorage.removeItem('sb-user');
     router.push('/auth/login');
   };
 
@@ -58,7 +81,14 @@ export default function DashboardPage() {
     }
   };
 
-  if (!user) return null;
+  if (authError) {
+    router.push('/auth/login');
+    return <div>Redirection vers la connexion...</div>;
+  }
+
+  if (loading || !user) {
+    return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">

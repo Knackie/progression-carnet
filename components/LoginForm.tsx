@@ -31,7 +31,31 @@ export default function LoginForm() {
         setLoading(false);
       } else {
         console.log('SignIn success:', data);
-        router.push('/dashboard');
+        
+        // Store session data in localStorage
+        if (data.data?.session) {
+          try {
+            const sessionStr = JSON.stringify(data.data.session);
+            const userStr = JSON.stringify(data.data.user);
+            
+            localStorage.setItem('sb-session', sessionStr);
+            localStorage.setItem('sb-user', userStr);
+            
+            console.log('Session stored in localStorage');
+            console.log('sb-session:', localStorage.getItem('sb-session') ? 'stored' : 'not found');
+            console.log('sb-user:', localStorage.getItem('sb-user') ? 'stored' : 'not found');
+            
+            // Small delay to ensure localStorage is fully synced
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Navigate to dashboard using router.push
+            router.push('/dashboard');
+          } catch (storageError) {
+            console.error('Failed to store session:', storageError);
+            setError('Erreur de stockage local');
+            setLoading(false);
+          }
+        }
       }
     } catch (err) {
       console.error('SignIn exception:', err);
@@ -83,3 +107,5 @@ export default function LoginForm() {
     </form>
   );
 }
+
+
