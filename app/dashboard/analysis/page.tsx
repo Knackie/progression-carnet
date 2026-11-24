@@ -10,6 +10,7 @@ interface Entry {
   entry_type: 'match' | 'training';
   date: string;
   score?: number;
+  match_result?: 'win' | 'loss' | 'draw';
   strengths: string[];
   weaknesses: string[];
   improvement_axes: string[];
@@ -18,6 +19,13 @@ interface Entry {
 interface AnalysisData {
   totalEntries: number;
   avgScore: number;
+  matchStats: {
+    totalMatches: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+  };
   topStrengths: { label: string; count: number }[];
   topWeaknesses: { label: string; count: number }[];
   topAxes: { label: string; count: number }[];
@@ -109,9 +117,23 @@ export default function AnalysisPage() {
         .slice(0, 5)
         .map(([label, count]) => ({ label, count }));
 
+      // Calculate match statistics
+      const matches = entries.filter((e) => e.entry_type === 'match');
+      const wins = matches.filter((e) => e.match_result === 'win').length;
+      const losses = matches.filter((e) => e.match_result === 'loss').length;
+      const draws = matches.filter((e) => e.match_result === 'draw').length;
+      const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
+
       setAnalysis({
         totalEntries,
         avgScore,
+        matchStats: {
+          totalMatches: matches.length,
+          wins,
+          losses,
+          draws,
+          winRate,
+        },
         topStrengths,
         topWeaknesses,
         topAxes,
@@ -170,7 +192,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-lg p-6 text-center">
           <div className="text-4xl mb-2">📝</div>
           <p className="text-gray-600 font-semibold">Total d'entrées</p>
@@ -181,6 +203,13 @@ export default function AnalysisPage() {
           <div className="text-4xl mb-2">⭐</div>
           <p className="text-gray-600 font-semibold">Score moyen</p>
           <p className="text-5xl font-bold text-purple-600">{analysis.avgScore}/10</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+          <div className="text-4xl mb-2">🏆</div>
+          <p className="text-gray-600 font-semibold">Taux de victoire</p>
+          <p className="text-5xl font-bold text-green-600">{analysis.matchStats.winRate}%</p>
+          <p className="text-sm text-gray-500 mt-2">({analysis.matchStats.wins}W/{analysis.matchStats.losses}L/{analysis.matchStats.draws}D)</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6 text-center">

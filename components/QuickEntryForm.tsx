@@ -18,6 +18,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
   const [entryType, setEntryType] = useState<'match' | 'training'>('match');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [score, setScore] = useState('5');
+  const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>('win');
   const [notes, setNotes] = useState('');
   const [strengths, setStrengths] = useState(['', '', '']);
   const [weaknesses, setWeaknesses] = useState(['', '', '']);
@@ -89,6 +90,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
           entry_type: entryType,
           notes,
           score: parseInt(score),
+          match_result: entryType === 'match' ? matchResult : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -113,6 +115,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
               entry_type: entryType,
               notes,
               score: parseInt(score),
+              match_result: entryType === 'match' ? matchResult : null,
               strengths: strengths.filter(s => s.trim()),
               weaknesses: weaknesses.filter(w => w.trim()),
               improvement_axes: axes.filter(a => a.trim()),
@@ -130,6 +133,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
       setSuccess(true);
       setNotes('');
       setScore('5');
+      setMatchResult('win');
       setStrengths(['', '', '']);
       setWeaknesses(['', '', '']);
       setAxes(['', '', '']);
@@ -231,6 +235,45 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
               </div>
             </div>
           </div>
+
+          {/* Section 1.5: Match Result (only for matches) */}
+          {entryType === 'match' && (
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
+              <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedSport === 'badminton' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold text-orange-900 mb-2">Résultat</label>
+                      <select
+                        value={matchResult}
+                        onChange={(e) => setMatchResult(e.target.value as 'win' | 'loss')}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        <option value="win">🎉 Victoire</option>
+                        <option value="loss">😔 Défaite</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold text-orange-900 mb-2">Résultat</label>
+                      <select
+                        value={matchResult}
+                        onChange={(e) => setMatchResult(e.target.value as 'win' | 'loss' | 'draw')}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        <option value="win">🎉 Victoire</option>
+                        <option value="draw">🤝 Nulle</option>
+                        <option value="loss">😔 Perte</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Section 2: Impressions */}
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">

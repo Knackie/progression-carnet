@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sport, date, entry_type, notes, score, strengths, weaknesses, improvement_axes } = body;
+    const { sport, date, entry_type, notes, score, match_result, strengths, weaknesses, improvement_axes } = body;
 
     // Get auth header
     const authHeader = request.headers.get('Authorization');
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
           entry_type,
           notes,
           score: score || null,
+          match_result: match_result || null,
           strengths: strengths || [],
           weaknesses: weaknesses || [],
           errors: [],

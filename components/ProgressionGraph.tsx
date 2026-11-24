@@ -7,6 +7,7 @@ interface Entry {
   id: string;
   date: string;
   score?: number;
+  match_result?: 'win' | 'loss' | 'draw';
   sport: 'badminton' | 'chess';
 }
 

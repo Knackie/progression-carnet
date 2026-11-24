@@ -8,6 +8,7 @@ interface Entry {
   entry_type: 'match' | 'training';
   date: string;
   score?: number;
+  match_result?: 'win' | 'loss' | 'draw';
   notes: string;
   strengths: string[];
   weaknesses: string[];
@@ -196,9 +197,20 @@ export default function EntriesList() {
                 </p>
               </div>
               {entry.score !== undefined && (
-                <div className="text-center bg-blue-50 rounded-lg p-3">
-                  <div className="text-3xl font-black text-blue-600">{entry.score}</div>
-                  <div className="text-xs text-gray-600">/10</div>
+                <div className="flex flex-col gap-2">
+                  <div className="text-center bg-blue-50 rounded-lg p-3">
+                    <div className="text-3xl font-black text-blue-600">{entry.score}</div>
+                    <div className="text-xs text-gray-600">/10</div>
+                  </div>
+                  {entry.entry_type === 'match' && entry.match_result && (
+                    <div className="text-center bg-orange-50 rounded-lg p-2 border border-orange-200">
+                      <div className="text-sm font-bold">
+                        {entry.match_result === 'win' && '🎉 Victoire'}
+                        {entry.match_result === 'loss' && '😔 Défaite'}
+                        {entry.match_result === 'draw' && '🤝 Nulle'}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
