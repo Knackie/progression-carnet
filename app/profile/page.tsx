@@ -300,9 +300,28 @@ export default function ProfilePage() {
         {/* Classement */}
         <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-3xl p-8 shadow-xl text-white text-center mb-8">
           <div className="text-6xl mb-4">🏆</div>
-          <h2 className="text-3xl font-bold mb-2">Classement</h2>
-          <div className="text-5xl font-bold mb-4">#1</div>
-          <p className="text-lg opacity-90">Vous êtes en tête du classement! Continuez comme ça! 🌟</p>
+          <h2 className="text-3xl font-bold mb-2">Votre Classement</h2>
+          {stats && stats.total > 0 ? (
+            <>
+              <div className="text-5xl font-bold mb-4">
+                {stats.winRate >= 70 ? '🥇 #1' : stats.winRate >= 50 ? '🥈 #2' : stats.winRate >= 30 ? '🥉 #3' : '📍 #4'}
+              </div>
+              <div className="text-2xl mb-4 font-semibold">
+                {stats.winRate >= 70 && 'Vous êtes un champion! 🌟'}
+                {stats.winRate >= 50 && stats.winRate < 70 && 'Très bon niveau! 💪'}
+                {stats.winRate >= 30 && stats.winRate < 50 && 'Progressez régulièrement! 📈'}
+                {stats.winRate < 30 && 'Continuez vos efforts! 🎯'}
+              </div>
+              <p className="text-lg opacity-90">
+                Basé sur votre Win Rate de <span className="font-bold">{stats.winRate}%</span> sur <span className="font-bold">{stats.total}</span> matchs
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="text-5xl font-bold mb-4">-</div>
+              <p className="text-lg opacity-90">Enregistrez vos matchs pour voir votre classement!</p>
+            </>
+          )}
         </div>
       </div>
 
