@@ -8,11 +8,13 @@ import EntriesList from '@/components/EntriesList';
 import ProgressionGraph from '@/components/ProgressionGraph';
 import PlayerProfile from '@/components/PlayerProfile';
 import { getOrRefreshSession } from '@/app/auth/actions';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSession, setHasSession] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const { isDark, toggleTheme } = useTheme();
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const router = useRouter();
@@ -110,9 +112,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-blue-950 transition-colors">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200/50 sticky top-0 z-50">
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -121,30 +123,42 @@ export default function DashboardPage() {
                 <h1 className="text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Carnet de Progression
                 </h1>
-                <p className="text-sm text-gray-600">{userEmail}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{userEmail}</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:from-red-600 hover:to-red-700 transition transform hover:scale-105 active:scale-95"
-            >
-              Déconnexion
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleTheme}
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-yellow-400 font-semibold hover:bg-gray-300 dark:hover:bg-gray-700 transition transform hover:scale-105"
+                title={isDark ? 'Mode clair' : 'Mode sombre'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+              <Link href="/info" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-semibold transition">
+                À Propos
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold transition transform hover:scale-105 active:scale-95"
+              >
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Session Expired Banner */}
       {sessionExpired && (
-        <div className="bg-yellow-100 border-b-2 border-yellow-400 px-4 py-4">
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 border-b-2 border-yellow-400 dark:border-yellow-600 px-4 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-2xl">⚠️</span>
-              <p className="text-yellow-800 font-semibold">Votre session a expiré. Veuillez vous reconnecter.</p>
+              <p className="text-yellow-800 dark:text-yellow-200 font-semibold">Votre session a expiré. Veuillez vous reconnecter.</p>
             </div>
             <button
               onClick={() => router.push('/auth/login')}
-              className="px-4 py-2 bg-yellow-700 text-white rounded-lg hover:bg-yellow-800 font-semibold"
+              className="px-4 py-2 bg-yellow-700 dark:bg-yellow-600 text-white rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 font-semibold"
             >
               Se reconnecter
             </button>
@@ -155,24 +169,30 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats Cards with Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <button onClick={scrollToForm} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <button onClick={scrollToForm} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 hover:shadow-xl dark:hover:shadow-purple-900/30 transition hover:scale-105 transform cursor-pointer text-left dark:border dark:border-gray-700">
             <div className="text-5xl mb-3">📝</div>
-            <h3 className="text-gray-600 text-sm font-semibold">Ajouter une Entrée</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-2">Rapide</p>
+            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-semibold">Ajouter une Entrée</h3>
+            <p className="text-2xl font-bold text-gray-800 dark:text-white mt-2">Rapide</p>
           </button>
 
-          <Link href="/dashboard/analysis" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
+          <Link href="/dashboard/analysis" className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 hover:shadow-xl dark:hover:shadow-purple-900/30 transition hover:scale-105 transform cursor-pointer dark:border dark:border-gray-700">
             <div className="text-5xl mb-3">📊</div>
-            <h3 className="text-gray-600 text-sm font-semibold">Analyse Structurée</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-2">Guidée</p>
+            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-semibold">Analyse Structurée</h3>
+            <p className="text-2xl font-bold text-gray-800 dark:text-white mt-2">Guidée</p>
           </Link>
 
-          <Link href="/dashboard/analysis#progression" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
+          <Link href="/dashboard/analysis#progression" className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 hover:shadow-xl dark:hover:shadow-purple-900/30 transition hover:scale-105 transform cursor-pointer dark:border dark:border-gray-700">
             <div className="text-5xl mb-3">📈</div>
-            <h3 className="text-gray-600 text-sm font-semibold">Progression</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-2">Visible</p>
+            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-semibold">Progression</h3>
+            <p className="text-2xl font-bold text-gray-800 dark:text-white mt-2">Visible</p>
           </Link>
+
+          <button onClick={() => document.getElementById('player-profile')?.scrollIntoView({ behavior: 'smooth' })} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 hover:shadow-xl dark:hover:shadow-purple-900/30 transition hover:scale-105 transform cursor-pointer text-left dark:border dark:border-gray-700">
+            <div className="text-5xl mb-3">👤</div>
+            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-semibold">Profil Joueur</h3>
+            <p className="text-2xl font-bold text-gray-800 dark:text-white mt-2">Complet</p>
+          </button>
         </div>
 
         {/* Progression Graph */}
@@ -181,7 +201,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Player Profile */}
-        <div className="mb-12">
+        <div className="mb-12" id="player-profile">
           <PlayerProfile />
         </div>
 

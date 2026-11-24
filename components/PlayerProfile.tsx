@@ -8,9 +8,11 @@ interface PlayerProfileData {
   first_name: string;
   last_name: string;
   age?: number;
-  sport: Sport;
+  sports: Sport[];
+  sport?: Sport; // Backward compatibility
   playing_style?: string;
   season_objective?: string;
+  current_ranking?: string;
   key_strengths?: string[];
   key_weaknesses?: string[];
   improvement_focus?: string[];
@@ -28,9 +30,10 @@ export default function PlayerProfile() {
     first_name: '',
     last_name: '',
     age: undefined,
-    sport: 'badminton',
+    sports: [],
     playing_style: '',
     season_objective: '',
+    current_ranking: '',
     key_strengths: ['', '', ''],
     key_weaknesses: ['', '', ''],
     improvement_focus: ['', '', ''],
@@ -71,8 +74,14 @@ export default function PlayerProfile() {
       }
 
       const data = await response.json();
-      setProfile(data.data);
-      setFormData(data.data);
+      // Convert old format (sport) to new format (sports) if needed
+      const profileData = data.data;
+      if (profileData && profileData.sport && !profileData.sports) {
+        profileData.sports = [profileData.sport];
+        delete profileData.sport;
+      }
+      setProfile(profileData);
+      setFormData(profileData);
     } catch (err) {
       console.error('Load profile error:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -239,16 +248,41 @@ export default function PlayerProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Sport</label>
-                <select
-                  name="sport"
-                  value={formData.sport}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="badminton">🏸 Badminton</option>
-                  <option value="chess">♟️ Échecs</option>
-                </select>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Sports</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.sports?.includes('badminton') || false}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          sports: e.target.checked
+                            ? [...(prev.sports || []), 'badminton']
+                            : (prev.sports || []).filter(s => s !== 'badminton'),
+                        }));
+                      }}
+                      className="w-5 h-5 cursor-pointer"
+                    />
+                    <span className="text-gray-700">🏸 Badminton</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.sports?.includes('chess') || false}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          sports: e.target.checked
+                            ? [...(prev.sports || []), 'chess']
+                            : (prev.sports || []).filter(s => s !== 'chess'),
+                        }));
+                      }}
+                      className="w-5 h-5 cursor-pointer"
+                    />
+                    <span className="text-gray-700">♟️ Échecs</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -272,6 +306,18 @@ export default function PlayerProfile() {
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-purple-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-20 resize-none"
                 placeholder="Ex: Atteindre le classement N1, Améliorer ma moyenne de 2 points..."
+              />
+            </div>
+
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200">
+              <label className="block text-sm font-bold text-indigo-900 mb-2">Classement Actuel</label>
+              <input
+                type="text"
+                name="current_ranking"
+                value={formData.current_ranking || ''}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Ex: N2, 1800 Elo, A1, etc..."
               />
             </div>
 
@@ -367,7 +413,9 @@ export default function PlayerProfile() {
                 {profile?.first_name} {profile?.last_name}
               </h2>
               <p className="text-purple-600 font-semibold">
-                {profile?.sport === 'badminton' ? '🏸 Badminton' : '♟️ Échecs'}
+                {profile?.sports && profile.sports.length > 0
+                  ? profile.sports.map(s => s === 'badminton' ? '🏸 Badminton' : '♟️ Échecs').join(', ')
+                  : 'Sport à définir'}
               </p>
             </div>
           </div>
@@ -397,6 +445,13 @@ export default function PlayerProfile() {
         <div className="bg-purple-50 rounded-lg p-4 mb-4 border border-purple-200">
           <p className="text-sm font-semibold text-purple-900 mb-1">Objectif de Saison</p>
           <p className="text-purple-800">{profile.season_objective}</p>
+        </div>
+      )}
+
+      {profile?.current_ranking && (
+        <div className="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-200">
+          <p className="text-sm font-semibold text-indigo-900 mb-1">🏆 Classement Actuel</p>
+          <p className="text-indigo-800 font-bold text-lg">{profile.current_ranking}</p>
         </div>
       )}
 

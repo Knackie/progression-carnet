@@ -235,9 +235,13 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
                       max="10"
                       value={score}
                       onChange={(e) => setScore(e.target.value)}
-                      className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                      className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                      style={{
+                        backgroundSize: `${(parseInt(score) / 10) * 100}% 100%`,
+                        backgroundImage: `linear-gradient(to right, #2563eb 0%, #2563eb ${(parseInt(score) / 10) * 100}%, #bfdbfe ${(parseInt(score) / 10) * 100}%, #bfdbfe 100%)`,
+                      }}
                     />
-                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
+                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit text-lg">{score}/10</div>
                   </div>
                 </div>
               )}

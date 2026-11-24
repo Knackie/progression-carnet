@@ -42,9 +42,10 @@ export interface PlayerProfile {
   first_name: string;
   last_name: string;
   age?: number;
-  sport: Sport;
+  sports: Sport[]; // Plusieurs sports possibles
   playing_style?: string; // Ex: Agressif, Défensif, Équilibré
   season_objective?: string; // Ex: Atteindre N1, Améliorer sa moyenne
+  current_ranking?: string; // Classement actuel (ex: N2, 1500, etc)
   key_strengths?: string[]; // Points forts majeurs
   key_weaknesses?: string[]; // Points faibles majeurs
   improvement_focus?: string[]; // Domaines prioritaires pour la progression

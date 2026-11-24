@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS player_profiles (
   sport VARCHAR(50) NOT NULL CHECK (sport IN ('badminton', 'chess')),
   playing_style TEXT,
   season_objective TEXT,
+  current_ranking VARCHAR(100),
   key_strengths TEXT[] DEFAULT ARRAY[]::TEXT[],
   key_weaknesses TEXT[] DEFAULT ARRAY[]::TEXT[],
   improvement_focus TEXT[] DEFAULT ARRAY[]::TEXT[],
