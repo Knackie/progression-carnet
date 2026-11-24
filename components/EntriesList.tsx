@@ -29,6 +29,37 @@ export default function EntriesList() {
     loadEntries();
   }, [isHydrated]);
 
+  const refreshAccessToken = async (refreshToken: string): Promise<string | null> => {
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      
+      // Update localStorage with new tokens
+      const sessionStr = localStorage.getItem('sb-session');
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        session.access_token = data.access_token;
+        session.refresh_token = data.refresh_token;
+        session.expires_at = data.expires_at;
+        localStorage.setItem('sb-session', JSON.stringify(session));
+      }
+
+      return data.access_token;
+    } catch (err) {
+      console.error('Token refresh error:', err);
+      return null;
+    }
+  };
+
   const loadEntries = async () => {
     try {
       setLoading(true);
@@ -53,11 +84,26 @@ export default function EntriesList() {
         return;
       }
 
-      const response = await fetch('/api/entries', {
+      let accessToken = session.access_token;
+      let response = await fetch('/api/entries', {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
+
+      // If we get 401, try to refresh the token
+      if (response.status === 401 && session.refresh_token) {
+        const newToken = await refreshAccessToken(session.refresh_token);
+        if (newToken) {
+          accessToken = newToken;
+          // Retry the request with the new token
+          response = await fetch('/api/entries', {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+        }
+      }
 
       if (!response.ok) {
         const data = await response.json();
