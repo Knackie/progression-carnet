@@ -42,49 +42,93 @@ export default function SignUpForm() {
 
   if (success) {
     return (
-      <div className="rounded-lg bg-green-50 p-4 text-green-800">
-        <p>Inscriptions réussies ! Vérifiez votre email pour confirmer votre compte.</p>
+      <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-5">
+        <div className="flex gap-3">
+          <span className="text-2xl">✅</span>
+          <div>
+            <p className="font-semibold text-green-800">Inscription réussie !</p>
+            <p className="text-green-700 text-sm mt-1">Vérifiez votre email pour confirmer votre compte et vous connecter.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSignUp} className="space-y-4">
+    <form onSubmit={handleSignUp} className="space-y-5">
+      {/* Email Input */}
       <div>
-        <label className="block text-sm font-medium">Email</label>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Adresse email
+        </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition"
+          placeholder="votre@email.com"
           required
         />
       </div>
 
+      {/* Password Input */}
       <div>
-        <label className="block text-sm font-medium">Mot de passe</label>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Mot de passe
+        </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition"
+          placeholder="Minimum 8 caractères"
           required
+          minLength={8}
         />
+        <p className="text-xs text-gray-500 mt-1">Minimum 8 caractères recommandés</p>
       </div>
 
-      {error && <div className="rounded bg-red-50 p-3 text-red-800">{error}</div>}
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm flex items-start gap-3">
+          <span className="text-lg">⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
 
+      {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Inscription...' : "S'inscrire"}
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="animate-spin">⌛</span>
+            Inscription en cours...
+          </span>
+        ) : (
+          "S'inscrire"
+        )}
       </button>
 
-      <p className="text-center text-sm">
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Ou</span>
+        </div>
+      </div>
+
+      {/* Login Link */}
+      <p className="text-center text-gray-700">
         Vous avez déjà un compte ?{' '}
-        <Link href="/auth/login" className="text-blue-600 hover:underline">
+        <Link
+          href="/auth/login"
+          className="font-bold text-blue-600 hover:text-blue-700 hover:underline"
+        >
           Se connecter
         </Link>
       </p>
