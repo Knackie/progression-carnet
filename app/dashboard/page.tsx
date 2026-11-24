@@ -82,6 +82,13 @@ export default function DashboardPage() {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const scrollToForm = () => {
+    const formElement = document.getElementById('quick-entry-form');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600">
@@ -148,11 +155,11 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats Cards with Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Link href="/dashboard" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
+          <button onClick={scrollToForm} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer text-left">
             <div className="text-5xl mb-3">📝</div>
-            <h3 className="text-gray-600 text-sm font-semibold">Suivi Personnel</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-2">Gratuit</p>
-          </Link>
+            <h3 className="text-gray-600 text-sm font-semibold">Ajouter une Entrée</h3>
+            <p className="text-2xl font-bold text-gray-800 mt-2">Rapide</p>
+          </button>
 
           <Link href="/dashboard/analysis" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
             <div className="text-5xl mb-3">📊</div>

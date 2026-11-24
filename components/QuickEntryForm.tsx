@@ -153,12 +153,14 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
 
   if (!isOpen) {
     return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl transition transform hover:scale-105 active:scale-95 text-lg shadow-lg"
-      >
-        ➕ Nouvelle Entrée
-      </button>
+      <div id="quick-entry-form">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl transition transform hover:scale-105 active:scale-95 text-lg shadow-lg"
+        >
+          ➕ Nouvelle Entrée
+        </button>
+      </div>
     );
   }
 
