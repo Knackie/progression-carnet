@@ -39,8 +39,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const toggleTheme = () => setIsDark(!isDark);
 
-  if (!mounted) return <>{children}</>;
-
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {children}

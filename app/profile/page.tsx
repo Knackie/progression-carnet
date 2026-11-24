@@ -116,8 +116,9 @@ export default function ProfilePage() {
     );
   }
 
-  const sportEmoji = profile.sport === 'badminton' ? '🏸' : '♟️';
-  const sportLabel = profile.sport === 'badminton' ? 'Badminton' : 'Échecs';
+  const sports = profile.sports ?? [];
+  const sportEmoji = sports.map(s => (s === 'badminton' ? '🏸' : '♟️')).join(' ') || '🏅';
+  const sportLabel = sports.map(s => (s === 'badminton' ? 'Badminton' : 'Échecs')).join(', ') || 'Aucun sport';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-8">
