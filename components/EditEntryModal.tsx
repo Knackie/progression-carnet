@@ -51,7 +51,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   const [selectedSport, setSelectedSport] = useState<Sport>(entry.sport);
   const [entryType, setEntryType] = useState<'match' | 'training'>(entry.entry_type);
   const [date, setDate] = useState(entry.date);
-  const [score, setScore] = useState(String(entry.score || 5));
+  const [score, setScore] = useState<number>(entry.score || 5);
   const [opponentLevel, setOpponentLevel] = useState(entry.opponent_level || '');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>(entry.match_result || 'win');
   const [notes, setNotes] = useState(entry.notes);
@@ -67,7 +67,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
       setSelectedSport(entry.sport);
       setEntryType(entry.entry_type);
       setDate(entry.date);
-      setScore(String(entry.score || 5));
+      setScore(entry.score || 5);
       setOpponentLevel(entry.opponent_level || '');
       setMatchResult(entry.match_result || 'win');
       setNotes(entry.notes);
@@ -102,7 +102,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           date,
           entry_type: entryType,
           notes,
-          score: entryType === 'match' ? parseInt(score) : null,
+          score: entryType === 'match' ? score : null,
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
           strengths: strengths.filter(s => s.trim()),
@@ -199,7 +199,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                       min="0"
                       max="10"
                       value={score}
-                      onChange={(e) => setScore(e.target.value)}
+                      onChange={(e) => setScore(parseInt(e.target.value))}
                       className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
