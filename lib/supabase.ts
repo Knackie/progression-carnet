@@ -6,7 +6,21 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function signUp(email: string, password: string) {
-  return supabase.auth.signUp({ email, password });
+  try {
+    const response = await supabase.auth.signUp({ email, password });
+    if (response.error) {
+      console.error('Supabase SignUp Error:', {
+        message: response.error.message,
+        status: response.error.status,
+        code: response.error.code,
+        details: JSON.stringify(response.error),
+      });
+    }
+    return response;
+  } catch (err) {
+    console.error('SignUp Exception:', err);
+    throw err;
+  }
 }
 
 export async function signIn(email: string, password: string) {

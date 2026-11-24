@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { signUp } from '@/lib/supabase';
 import Link from 'next/link';
 
 export default function SignUpForm() {
@@ -16,12 +15,27 @@ export default function SignUpForm() {
     setLoading(true);
     setError('');
 
-    const { error: err } = await signUp(email, password);
-    if (err) {
-      setError(err.message);
-      setLoading(false);
-    } else {
-      setSuccess(true);
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('SignUp failed:', data);
+        setError(data.error || 'Une erreur est survenue');
+        setLoading(false);
+      } else {
+        console.log('SignUp success:', data);
+        setSuccess(true);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('SignUp exception:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       setLoading(false);
     }
   };

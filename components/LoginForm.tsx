@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -17,12 +16,27 @@ export default function LoginForm() {
     setLoading(true);
     setError('');
 
-    const { error: err } = await signIn(email, password);
-    if (err) {
-      setError(err.message);
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('SignIn failed:', data);
+        setError(data.error || 'Une erreur est survenue');
+        setLoading(false);
+      } else {
+        console.log('SignIn success:', data);
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      console.error('SignIn exception:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       setLoading(false);
-    } else {
-      router.push('/dashboard');
     }
   };
 
