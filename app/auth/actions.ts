@@ -1,32 +1,40 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import { redirect } from 'next/navigation';
 
-export async function signInWithEmail(email: string, password: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export async function getOrRefreshSession() {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    // Try to get the current user (this reads from cookies if available)
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error) {
-    return { error: error.message };
-  }
+    if (error || !user) {
+      return { error: 'Session expired', user: null };
+    }
 
-  // Store session in cookies or return it for client-side storage
-  if (data.session) {
-    // Return session data - client will store it in localStorage
+    // Get current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      return { error: 'No session found', user, session: null };
+    }
+
     return {
       success: true,
-      session: data.session,
-      user: data.user,
+      user,
+      session: {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+      },
     };
+  } catch (err) {
+    console.error('Get session error:', err);
+    return { error: err instanceof Error ? err.message : 'Unknown error', user: null };
   }
-
-  return { error: 'No session returned' };
 }
+

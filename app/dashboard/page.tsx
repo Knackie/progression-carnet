@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QuickEntryForm from '@/components/QuickEntryForm';
 import EntriesList from '@/components/EntriesList';
+import { getOrRefreshSession } from '@/app/auth/actions';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSession, setHasSession] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const router = useRouter();
 
@@ -18,30 +20,55 @@ export default function DashboardPage() {
       return;
     }
 
-    const session = localStorage.getItem('sb-session');
-    const user = localStorage.getItem('sb-user');
-    
-    console.log('Dashboard checking auth...');
-
-    if (!session || !user) {
-      console.log('No session/user found, redirecting to login');
-      setIsLoading(false);
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 100);
-      return;
-    }
-
-    try {
-      const userData = JSON.parse(user);
-      setUserEmail(userData.email);
-    } catch (e) {
-      console.error('Failed to parse user:', e);
-    }
-
-    setHasSession(true);
-    setIsLoading(false);
+    checkAuth();
   }, [router]);
+
+  const checkAuth = async () => {
+    try {
+      setIsLoading(true);
+
+      // First, try to get session from server (checks cookies)
+      const serverResult = await getOrRefreshSession();
+
+      if (serverResult.session && serverResult.user) {
+        // Session is valid from cookies, update localStorage
+        localStorage.setItem('sb-session', JSON.stringify(serverResult.session));
+        localStorage.setItem('sb-user', JSON.stringify(serverResult.user));
+        setUserEmail(serverResult.user.email);
+        setHasSession(true);
+        setSessionExpired(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // If no server session, try localStorage
+      const sessionStr = localStorage.getItem('sb-session');
+      const userStr = localStorage.getItem('sb-user');
+
+      if (!sessionStr || !userStr) {
+        setIsLoading(false);
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 100);
+        return;
+      }
+
+      try {
+        const userData = JSON.parse(userStr);
+        setUserEmail(userData.email);
+        setHasSession(true);
+        setSessionExpired(false);
+      } catch (e) {
+        console.error('Failed to parse user:', e);
+        setSessionExpired(true);
+      }
+
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Auth check error:', err);
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('sb-session');
@@ -96,6 +123,24 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Session Expired Banner */}
+      {sessionExpired && (
+        <div className="bg-yellow-100 border-b-2 border-yellow-400 px-4 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <p className="text-yellow-800 font-semibold">Votre session a expiré. Veuillez vous reconnecter.</p>
+            </div>
+            <button
+              onClick={() => router.push('/auth/login')}
+              className="px-4 py-2 bg-yellow-700 text-white rounded-lg hover:bg-yellow-800 font-semibold"
+            >
+              Se reconnecter
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
