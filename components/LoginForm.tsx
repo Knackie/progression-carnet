@@ -1,15 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { signInWithEmail } from '@/app/auth/actions';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,39 +16,27 @@ export default function LoginForm() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const result = await signInWithEmail(email, password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error('SignIn failed:', data);
-        setError(data.error || 'Une erreur est survenue');
+      if (result.error) {
+        console.error('SignIn failed:', result.error);
+        setError(result.error);
         setLoading(false);
       } else {
-        console.log('SignIn success:', data);
+        console.log('SignIn success');
         
         // Store session data in localStorage
-        if (data.data?.session) {
+        if (result.session) {
           try {
-            const sessionStr = JSON.stringify(data.data.session);
-            const userStr = JSON.stringify(data.data.user);
+            localStorage.setItem('sb-session', JSON.stringify(result.session));
+            localStorage.setItem('sb-user', JSON.stringify(result.user));
             
-            localStorage.setItem('sb-session', sessionStr);
-            localStorage.setItem('sb-user', userStr);
+            console.log('Session and user stored in localStorage');
             
-            console.log('Session stored in localStorage');
-            console.log('sb-session:', localStorage.getItem('sb-session') ? 'stored' : 'not found');
-            console.log('sb-user:', localStorage.getItem('sb-user') ? 'stored' : 'not found');
-            
-            // Small delay to ensure localStorage is fully synced
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Navigate to dashboard using router.push
-            router.push('/dashboard');
+            // Use window.location.href for hard redirect - avoids Next.js RSC issues
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 50);
           } catch (storageError) {
             console.error('Failed to store session:', storageError);
             setError('Erreur de stockage local');
