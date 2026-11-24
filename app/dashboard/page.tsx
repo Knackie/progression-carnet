@@ -34,7 +34,7 @@ export default function DashboardPage() {
         // Session is valid from cookies, update localStorage
         localStorage.setItem('sb-session', JSON.stringify(serverResult.session));
         localStorage.setItem('sb-user', JSON.stringify(serverResult.user));
-        setUserEmail(serverResult.user.email);
+        setUserEmail(serverResult.user.email || '');
         setHasSession(true);
         setSessionExpired(false);
         setIsLoading(false);
