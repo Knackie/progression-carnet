@@ -108,10 +108,7 @@ export default function ProfilePage() {
 
           {isEditingProfile && (
             <div className="mt-8">
-              <PlayerProfile onProfileCreated={() => {
-                setIsEditingProfile(false);
-                window.location.reload();
-              }} />
+              <PlayerProfile />
             </div>
           )}
         </div>
@@ -323,12 +320,7 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="p-6">
-              <PlayerProfile 
-                onProfileCreated={() => {
-                  setIsEditingProfile(false);
-                  window.location.reload();
-                }} 
-              />
+              <PlayerProfile />
             </div>
           </div>
         </div>
