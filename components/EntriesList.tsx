@@ -18,10 +18,16 @@ export default function EntriesList() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    loadEntries();
+    setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    loadEntries();
+  }, [isHydrated]);
 
   const loadEntries = async () => {
     try {
@@ -33,7 +39,7 @@ export default function EntriesList() {
       const userStr = localStorage.getItem('sb-user');
 
       if (!sessionStr || !userStr) {
-        setError('Session non trouvée');
+        setError('Session non trouvée - veuillez vous reconnecter');
         setLoading(false);
         return;
       }
@@ -68,6 +74,10 @@ export default function EntriesList() {
     }
   };
 
+  if (!isHydrated) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8">
@@ -83,12 +93,12 @@ export default function EntriesList() {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="text-center">
-          <p className="text-red-600">❌ {error}</p>
+          <p className="text-red-600 font-semibold">❌ {error}</p>
           <button
             onClick={loadEntries}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition"
           >
-            Réessayer
+            🔄 Réessayer
           </button>
         </div>
       </div>
@@ -109,7 +119,7 @@ export default function EntriesList() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-bold text-gray-800">📋 Vos Entrées Récentes</h3>
+      <h3 className="text-2xl font-bold text-gray-800">📋 Vos Entrées Récentes ({entries.length})</h3>
       <div className="grid gap-4">
         {entries.slice(0, 10).map((entry) => (
           <div
