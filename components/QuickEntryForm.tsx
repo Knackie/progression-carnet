@@ -18,6 +18,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
   const [entryType, setEntryType] = useState<'match' | 'training'>('match');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [score, setScore] = useState('5');
+  const [opponentLevel, setOpponentLevel] = useState('');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>('win');
   const [notes, setNotes] = useState('');
   const [strengths, setStrengths] = useState(['', '', '']);
@@ -89,7 +90,8 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
           date,
           entry_type: entryType,
           notes,
-          score: parseInt(score),
+          score: entryType === 'match' ? parseInt(score) : null,
+          opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
@@ -114,7 +116,8 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
               date,
               entry_type: entryType,
               notes,
-              score: parseInt(score),
+              score: entryType === 'match' ? parseInt(score) : null,
+              opponent_level: entryType === 'match' ? opponentLevel : null,
               match_result: entryType === 'match' ? matchResult : null,
               strengths: strengths.filter(s => s.trim()),
               weaknesses: weaknesses.filter(w => w.trim()),
@@ -133,6 +136,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
       setSuccess(true);
       setNotes('');
       setScore('5');
+      setOpponentLevel('');
       setMatchResult('win');
       setStrengths(['', '', '']);
       setWeaknesses(['', '', '']);
@@ -221,24 +225,46 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    value={score}
-                    onChange={(e) => setScore(e.target.value)}
-                    className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
+              {entryType === 'match' && (
+                <div>
+                  <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={score}
+                      onChange={(e) => setScore(e.target.value)}
+                      className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Section 1.5: Match Result (only for matches) */}
+          {/* Section 1.5: Match Details (only for matches) */}
+          {entryType === 'match' && (
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+              <h4 className="text-lg font-bold text-green-900 mb-4">👥 Détails du Match</h4>
+              <div>
+                <label className="block text-sm font-bold text-green-900 mb-2">Niveau de l'Adversaire</label>
+                <select
+                  value={opponentLevel}
+                  onChange={(e) => setOpponentLevel(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">-- Sélectionner --</option>
+                  <option value="debutant">🟩 Débutant</option>
+                  <option value="intermediaire">🟨 Intermédiaire</option>
+                  <option value="avance">🟥 Avancé</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Section 1.6: Match Result (only for matches) */}
           {entryType === 'match' && (
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
               <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>

@@ -10,6 +10,7 @@ interface EditEntryModalProps {
     entry_type: 'match' | 'training';
     date: string;
     score?: number;
+    opponent_level?: string;
     match_result?: 'win' | 'loss' | 'draw';
     notes: string;
     strengths: string[];
@@ -31,6 +32,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   const [entryType, setEntryType] = useState<'match' | 'training'>(entry.entry_type);
   const [date, setDate] = useState(entry.date);
   const [score, setScore] = useState(String(entry.score || 5));
+  const [opponentLevel, setOpponentLevel] = useState(entry.opponent_level || '');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>(entry.match_result || 'win');
   const [notes, setNotes] = useState(entry.notes);
   const [strengths, setStrengths] = useState<string[]>(entry.strengths || ['', '', '']);
@@ -46,6 +48,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
       setEntryType(entry.entry_type);
       setDate(entry.date);
       setScore(String(entry.score || 5));
+      setOpponentLevel(entry.opponent_level || '');
       setMatchResult(entry.match_result || 'win');
       setNotes(entry.notes);
       setStrengths(entry.strengths || ['', '', '']);
@@ -79,7 +82,8 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           date,
           entry_type: entryType,
           notes,
-          score: parseInt(score),
+          score: entryType === 'match' ? parseInt(score) : null,
+          opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
@@ -166,22 +170,44 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    value={score}
-                    onChange={(e) => setScore(e.target.value)}
-                    className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
+              {entryType === 'match' && (
+                <div>
+                  <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={score}
+                      onChange={(e) => setScore(e.target.value)}
+                      className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
+
+          {/* Match Details */}
+          {entryType === 'match' && (
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+              <h4 className="text-lg font-bold text-green-900 mb-4">👥 Détails du Match</h4>
+              <div>
+                <label className="block text-sm font-bold text-green-900 mb-2">Niveau de l'Adversaire</label>
+                <select
+                  value={opponentLevel}
+                  onChange={(e) => setOpponentLevel(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">-- Sélectionner --</option>
+                  <option value="debutant">🟩 Débutant</option>
+                  <option value="intermediaire">🟨 Intermédiaire</option>
+                  <option value="avance">🟥 Avancé</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Match Result */}
           {entryType === 'match' && (
