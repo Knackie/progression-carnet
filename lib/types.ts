@@ -1,0 +1,37 @@
+export type Sport = 'badminton' | 'chess';
+
+export interface ProgressionEntry {
+  id: string;
+  user_id: string;
+  sport: Sport;
+  date: string;
+  entry_type: 'match' | 'training';
+  
+  // Journal libre
+  notes: string;
+  
+  // Analyse guidée
+  strengths: string[]; // 3 points forts
+  weaknesses: string[]; // 3 points faibles
+  errors: string[]; // Erreurs principales
+  improvement_axes: string[]; // 3 axes de progression
+  
+  // Scoring (optionnel)
+  score?: number; // 0-10
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProgressionStats {
+  total_entries: number;
+  average_score: number;
+  entries_by_month: Array<{ month: string; count: number; avg_score: number }>;
+  most_common_weaknesses: string[];
+  most_common_strengths: string[];
+}
+
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
