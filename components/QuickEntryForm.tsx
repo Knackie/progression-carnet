@@ -249,16 +249,27 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
               <h4 className="text-lg font-bold text-green-900 mb-4">👥 Détails du Match</h4>
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-2">Niveau de l'Adversaire</label>
+                <label className="block text-sm font-bold text-green-900 mb-2">Classement de l'Adversaire</label>
                 <select
                   value={opponentLevel}
                   onChange={(e) => setOpponentLevel(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
                   <option value="">-- Sélectionner --</option>
-                  <option value="debutant">🟩 Débutant</option>
-                  <option value="intermediaire">🟨 Intermédiaire</option>
-                  <option value="avance">🟥 Avancé</option>
+                  {selectedSport === 'badminton' ? (
+                    <>
+                      <option value="P">🟩 P (Poussin)</option>
+                      <option value="D">🟨 D (Division)</option>
+                      <option value="R">🟧 R (Régional)</option>
+                      <option value="N">🟥 N (National)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="debutant">🟩 Débutant</option>
+                      <option value="intermediaire">🟨 Intermédiaire</option>
+                      <option value="avance">🟥 Avancé</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
