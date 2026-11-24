@@ -43,10 +43,16 @@ export default function Home() {
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-3xl">🏸</span>
+            <span className="text-3xl">📊</span>
             <span className="text-2xl font-black text-white">Carnet de Progression</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <Link
+              href="/info"
+              className="px-6 py-2 text-white font-semibold hover:bg-white/20 rounded-lg transition"
+            >
+              À Propos
+            </Link>
             <Link
               href="/auth/login"
               className="px-6 py-2 text-white font-semibold hover:bg-white/20 rounded-lg transition"
