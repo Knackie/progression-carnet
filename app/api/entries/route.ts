@@ -6,13 +6,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { sport, date, entry_type, notes, score, strengths, weaknesses, improvement_axes } = body;
 
-    // Get user from localStorage (passed via body)
+    // Get auth header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing authorization' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get user with the token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
       return NextResponse.json(
@@ -60,12 +70,23 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Get auth header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing authorization' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get user with the token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
       return NextResponse.json(

@@ -34,9 +34,23 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
     setSuccess(false);
 
     try {
+      // Get session from localStorage
+      const sessionStr = localStorage.getItem('sb-session');
+      if (!sessionStr) {
+        throw new Error('Session non trouvée');
+      }
+
+      const session = JSON.parse(sessionStr);
+      if (!session.access_token) {
+        throw new Error('Token d\'accès invalide');
+      }
+
       const response = await fetch('/api/entries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           sport: selectedSport,
           date,

@@ -26,15 +26,42 @@ export default function EntriesList() {
   const loadEntries = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/entries');
-      
+      setError('');
+
+      // Get session from localStorage
+      const sessionStr = localStorage.getItem('sb-session');
+      const userStr = localStorage.getItem('sb-user');
+
+      if (!sessionStr || !userStr) {
+        setError('Session non trouvée');
+        setLoading(false);
+        return;
+      }
+
+      const session = JSON.parse(sessionStr);
+      const user = JSON.parse(userStr);
+
+      if (!session.access_token) {
+        setError('Token d\'accès invalide');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/entries', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement');
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors du chargement');
       }
 
       const data = await response.json();
       setEntries(data.data || []);
     } catch (err) {
+      console.error('Load entries error:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
@@ -57,6 +84,12 @@ export default function EntriesList() {
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="text-center">
           <p className="text-red-600">❌ {error}</p>
+          <button
+            onClick={loadEntries}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     );
