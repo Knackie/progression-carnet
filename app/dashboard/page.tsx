@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import QuickEntryForm from '@/components/QuickEntryForm';
 import EntriesList from '@/components/EntriesList';
+import ProgressionGraph from '@/components/ProgressionGraph';
 import { getOrRefreshSession } from '@/app/auth/actions';
 
 export default function DashboardPage() {
@@ -144,25 +146,30 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Stats Cards */}
+        {/* Stats Cards with Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+          <Link href="/dashboard" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
             <div className="text-5xl mb-3">📝</div>
             <h3 className="text-gray-600 text-sm font-semibold">Suivi Personnel</h3>
             <p className="text-2xl font-bold text-gray-800 mt-2">Gratuit</p>
-          </div>
+          </Link>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+          <Link href="/dashboard/analysis" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
             <div className="text-5xl mb-3">📊</div>
             <h3 className="text-gray-600 text-sm font-semibold">Analyse Structurée</h3>
             <p className="text-2xl font-bold text-gray-800 mt-2">Guidée</p>
-          </div>
+          </Link>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+          <Link href="/dashboard/analysis#progression" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:scale-105 transform cursor-pointer">
             <div className="text-5xl mb-3">📈</div>
             <h3 className="text-gray-600 text-sm font-semibold">Progression</h3>
             <p className="text-2xl font-bold text-gray-800 mt-2">Visible</p>
-          </div>
+          </Link>
+        </div>
+
+        {/* Progression Graph */}
+        <div className="mb-12">
+          <ProgressionGraph />
         </div>
 
         {/* Two Column Layout */}
