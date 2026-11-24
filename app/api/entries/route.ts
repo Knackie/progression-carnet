@@ -19,7 +19,14 @@ export async function POST(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create client with the JWT token in headers so RLS policies work
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
 
     // Get user with the token
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
@@ -83,7 +90,14 @@ export async function GET(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create client with the JWT token in headers so RLS policies work
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
 
     // Get user with the token
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
