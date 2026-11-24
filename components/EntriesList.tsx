@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import EditEntryModal from './EditEntryModal';
 
 interface Entry {
   id: string;
@@ -20,6 +21,8 @@ export default function EntriesList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -121,6 +124,40 @@ export default function EntriesList() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette entrée?')) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+      const sessionStr = localStorage.getItem('sb-session');
+      if (!sessionStr) {
+        throw new Error('Session non trouvée');
+      }
+
+      const session = JSON.parse(sessionStr);
+
+      const response = await fetch(`/api/entries/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de la suppression');
+      }
+
+      setEntries(entries.filter(e => e.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (!isHydrated) {
     return null;
   }
@@ -196,23 +233,43 @@ export default function EntriesList() {
                   })}
                 </p>
               </div>
-              {entry.score !== undefined && (
-                <div className="flex flex-col gap-2">
-                  <div className="text-center bg-blue-50 rounded-lg p-3">
-                    <div className="text-3xl font-black text-blue-600">{entry.score}</div>
-                    <div className="text-xs text-gray-600">/10</div>
-                  </div>
-                  {entry.entry_type === 'match' && entry.match_result && (
-                    <div className="text-center bg-orange-50 rounded-lg p-2 border border-orange-200">
-                      <div className="text-sm font-bold">
-                        {entry.match_result === 'win' && '🎉 Victoire'}
-                        {entry.match_result === 'loss' && '😔 Défaite'}
-                        {entry.match_result === 'draw' && '🤝 Nulle'}
-                      </div>
+              <div className="flex flex-col gap-2 items-end">
+                {entry.score !== undefined && (
+                  <div className="flex flex-col gap-2">
+                    <div className="text-center bg-blue-50 rounded-lg p-3">
+                      <div className="text-3xl font-black text-blue-600">{entry.score}</div>
+                      <div className="text-xs text-gray-600">/10</div>
                     </div>
-                  )}
+                    {entry.entry_type === 'match' && entry.match_result && (
+                      <div className="text-center bg-orange-50 rounded-lg p-2 border border-orange-200">
+                        <div className="text-sm font-bold">
+                          {entry.match_result === 'win' && '🎉 Victoire'}
+                          {entry.match_result === 'loss' && '😔 Défaite'}
+                          {entry.match_result === 'draw' && '🤝 Nulle'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingId(entry.id)}
+                    className="px-3 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition"
+                    title="Éditer cette entrée"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDelete(entry.id)}
+                    disabled={deletingId === entry.id}
+                    className="px-3 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                    title="Supprimer cette entrée"
+                  >
+                    {deletingId === entry.id ? '...' : '🗑️'}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Notes */}
@@ -264,6 +321,16 @@ export default function EntriesList() {
           </div>
         ))}
       </div>
+
+      {/* Edit Modal */}
+      {editingId && (
+        <EditEntryModal
+          entry={entries.find(e => e.id === editingId)!}
+          isOpen={!!editingId}
+          onClose={() => setEditingId(null)}
+          onSave={loadEntries}
+        />
+      )}
     </div>
   );
 }
