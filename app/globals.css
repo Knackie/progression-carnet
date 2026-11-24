@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4 ignore darkMode de tailwind.config.ts : on pilote dark: via la classe .dark */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,11 +15,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
 }
 
 body {
@@ -24,3 +26,50 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/*
+ * Fallback sombre pour les composants qui n'ont pas de classes dark: explicites.
+ * Les éléments qui définissent leur propre dark:* sont exclus via :not([class*=...]).
+ */
+.dark .bg-white:not([class*="dark:bg-"]) { background-color: var(--color-gray-800); }
+.dark :is([class~="bg-white/80"], [class~="bg-white/90"], [class~="bg-white/95"]):not([class*="dark:bg-"]) {
+  background-color: color-mix(in oklab, var(--color-gray-800) 95%, transparent);
+}
+.dark .bg-gray-50:not([class*="dark:bg-"]) { background-color: var(--color-gray-900); }
+.dark .bg-gray-100:not([class*="dark:bg-"]) { background-color: var(--color-gray-800); }
+.dark .bg-gray-200:not([class*="dark:bg-"]),
+.dark .bg-gray-300:not([class*="dark:bg-"]) { background-color: var(--color-gray-700); }
+.dark .bg-blue-50:not([class*="dark:bg-"]),
+.dark .bg-blue-100:not([class*="dark:bg-"]),
+.dark .bg-indigo-50:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-blue-900) 40%, transparent); }
+.dark .bg-purple-50:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-purple-900) 40%, transparent); }
+.dark .bg-green-50:not([class*="dark:bg-"]),
+.dark .bg-green-100:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-green-900) 40%, transparent); }
+.dark .bg-red-50:not([class*="dark:bg-"]),
+.dark .bg-red-100:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-red-900) 40%, transparent); }
+.dark .bg-yellow-50:not([class*="dark:bg-"]),
+.dark .bg-orange-50:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-yellow-900) 40%, transparent); }
+
+.dark .from-gray-50:not([class*="dark:from-"]),
+.dark .from-blue-50:not([class*="dark:from-"]),
+.dark .from-purple-50:not([class*="dark:from-"]) { --tw-gradient-from: var(--color-gray-950); }
+.dark .to-gray-50:not([class*="dark:to-"]),
+.dark .to-gray-100:not([class*="dark:to-"]),
+.dark .to-blue-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-blue-950); }
+.dark .to-purple-50:not([class*="dark:to-"]),
+.dark .to-purple-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-purple-950); }
+
+.dark .text-gray-900:not([class*="dark:text-"]),
+.dark .text-gray-800:not([class*="dark:text-"]) { color: var(--color-gray-100); }
+.dark .text-gray-700:not([class*="dark:text-"]) { color: var(--color-gray-200); }
+.dark .text-gray-600:not([class*="dark:text-"]) { color: var(--color-gray-300); }
+.dark .text-gray-500:not([class*="dark:text-"]) { color: var(--color-gray-400); }
+
+.dark .border-gray-200:not([class*="dark:border-"]),
+.dark .border-gray-300:not([class*="dark:border-"]) { border-color: var(--color-gray-700); }
+
+.dark :is(input, textarea, select):not([type="checkbox"], [type="radio"], [type="range"], [class*="dark:bg-"]) {
+  background-color: var(--color-gray-900);
+  color: var(--color-gray-100);
+}
+.dark :is(input, textarea)::placeholder { color: var(--color-gray-500); }
