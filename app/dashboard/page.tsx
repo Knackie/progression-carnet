@@ -10,6 +10,7 @@ import { useTheme } from '@/lib/ThemeContext';
 import Logo from '@/components/Logo';
 import PrepareMatchModal from '@/components/PrepareMatchModal';
 import GoalCard from '@/components/GoalCard';
+import InstallButton from '@/components/InstallButton';
 
 const tileClass =
   'bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-3 sm:p-4 hover:shadow-xl transition flex flex-col items-center text-center gap-1 dark:border dark:border-gray-700';
@@ -117,6 +118,7 @@ export default function DashboardPage() {
               </div>
             </Link>
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <InstallButton />
               <button
                 onClick={toggleTheme}
                 className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-yellow-400 font-semibold hover:bg-gray-300 dark:hover:bg-gray-700 transition"
