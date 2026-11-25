@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Sport } from '@/lib/types';
+import { BADMINTON_RANKS } from '@/lib/rankings';
 
 interface PlayerProfileData {
   id?: string;
@@ -314,11 +315,17 @@ export default function PlayerProfile() {
               <input
                 type="text"
                 name="current_ranking"
+                list="badminton-ranks"
                 value={formData.current_ranking || ''}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Ex: N2, 1800 Elo, A1, etc..."
+                placeholder="Ex: P10, D8, R6… ou 1500 Elo aux échecs"
               />
+              <datalist id="badminton-ranks">
+                {BADMINTON_RANKS.map(rank => (
+                  <option key={rank} value={rank} />
+                ))}
+              </datalist>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">

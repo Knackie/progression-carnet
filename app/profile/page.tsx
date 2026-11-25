@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PlayerProfile from '@/components/PlayerProfile';
 import { PlayerProfile as PlayerProfileType } from '@/lib/types';
+import { nextBadmintonRank } from '@/lib/rankings';
 
 interface MatchStats {
   total: number;
@@ -30,7 +31,7 @@ export default function ProfilePage() {
       try {
         const sessionStr = localStorage.getItem('sb-session');
         if (!sessionStr) {
-          router.push('/login');
+          router.push('/auth/login');
           return;
         }
 
@@ -44,7 +45,7 @@ export default function ProfilePage() {
         });
 
         if (profileResponse.ok) {
-          const data = await profileResponse.json();
+          const { data } = await profileResponse.json();
           setProfile(data);
         }
 
@@ -119,6 +120,7 @@ export default function ProfilePage() {
   const sports = profile.sports ?? [];
   const sportEmoji = sports.map(s => (s === 'badminton' ? '🏸' : '♟️')).join(' ') || '🏅';
   const sportLabel = sports.map(s => (s === 'badminton' ? 'Badminton' : 'Échecs')).join(', ') || 'Aucun sport';
+  const nextRank = profile.current_ranking ? nextBadmintonRank(profile.current_ranking) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-8">
@@ -298,30 +300,32 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Classement */}
+        {/* Classement FFBaD */}
         <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-3xl p-8 shadow-xl text-white text-center mb-8">
           <div className="text-6xl mb-4">🏆</div>
           <h2 className="text-3xl font-bold mb-2">Votre Classement</h2>
-          {stats && stats.total > 0 ? (
+          {profile.current_ranking ? (
             <>
-              <div className="text-5xl font-bold mb-4">
-                {stats.winRate >= 70 ? '🥇 #1' : stats.winRate >= 50 ? '🥈 #2' : stats.winRate >= 30 ? '🥉 #3' : '📍 #4'}
-              </div>
-              <div className="text-2xl mb-4 font-semibold">
-                {stats.winRate >= 70 && 'Vous êtes un champion! 🌟'}
-                {stats.winRate >= 50 && stats.winRate < 70 && 'Très bon niveau! 💪'}
-                {stats.winRate >= 30 && stats.winRate < 50 && 'Progressez régulièrement! 📈'}
-                {stats.winRate < 30 && 'Continuez vos efforts! 🎯'}
-              </div>
-              <p className="text-lg opacity-90">
-                Basé sur votre Win Rate de <span className="font-bold">{stats.winRate}%</span> sur <span className="font-bold">{stats.total}</span> matchs
-              </p>
+              <div className="text-5xl font-bold mb-4">{profile.current_ranking}</div>
+              {nextRank && (
+                <p className="text-xl font-semibold">
+                  Prochain palier : <span className="font-black">{nextRank}</span>
+                </p>
+              )}
+              {profile.season_objective && (
+                <p className="text-lg opacity-90 mt-2">🎯 {profile.season_objective}</p>
+              )}
             </>
           ) : (
             <>
               <div className="text-5xl font-bold mb-4">-</div>
-              <p className="text-lg opacity-90">Enregistrez vos matchs pour voir votre classement!</p>
+              <p className="text-lg opacity-90">Renseignez votre classement dans votre profil.</p>
             </>
+          )}
+          {stats && stats.total > 0 && (
+            <p className="text-lg opacity-90 mt-4">
+              Forme : <span className="font-bold">{stats.winRate}%</span> de victoires sur <span className="font-bold">{stats.total}</span> matchs
+            </p>
           )}
         </div>
       </div>

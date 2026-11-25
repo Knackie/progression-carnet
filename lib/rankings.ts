@@ -30,3 +30,11 @@ export function isKnownLevel(value: string): boolean {
 export function legacyLevelLabel(value: string): string {
   return LEGACY_BADMINTON_LABELS[value] ?? value;
 }
+
+export const BADMINTON_RANKS = BADMINTON_RANKING_GROUPS.flatMap(g => g.ranks);
+
+export function nextBadmintonRank(rank: string): string | null {
+  const index = BADMINTON_RANKS.indexOf(rank.trim().toUpperCase());
+  if (index === -1 || index === BADMINTON_RANKS.length - 1) return null;
+  return BADMINTON_RANKS[index + 1];
+}
