@@ -29,12 +29,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const result = params.get('result');
-    if (result !== 'win' && result !== 'loss') return;
+    if (result !== 'win' && result !== 'loss' && result !== 'draw') return;
     const points = Number(params.get('points'));
+    const chess = params.get('sport') === 'chess';
     setPrefill({
-      sport: 'badminton',
+      sport: chess ? 'chess' : 'badminton',
       matchResult: result,
-      pointsDelta: Number.isFinite(points) ? points : undefined,
+      pointsDelta: !chess && params.get('points') !== null && Number.isFinite(points) ? points : undefined,
       notes: params.get('note') ?? undefined,
     });
     window.history.replaceState(null, '', '/dashboard');
@@ -175,7 +176,7 @@ export default function DashboardPage() {
             <Link href="/dashboard/calculator" className={tileClass}>
               <span className="text-2xl sm:text-3xl">🧮</span>
               <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Calcul</span>
-              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">points FFBaD</span>
+              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">points FFBaD · Elo</span>
             </Link>
             <Link href="/dashboard/analysis" className={tileClass}>
               <span className="text-2xl sm:text-3xl">📊</span>

@@ -168,7 +168,7 @@ SELECT
   COUNT(CASE WHEN match_result = 'draw' THEN 1 END) AS draw_count,
   MAX(date) AS last_entry_date
 FROM progression_entries
-GROUP BY user_id, sport;
+GROUP BY 1, 2;
 
 CREATE OR REPLACE VIEW monthly_stats WITH (security_invoker = true) AS
 SELECT
@@ -178,4 +178,4 @@ SELECT
   COUNT(*) AS entries,
   ROUND(AVG(score)::numeric, 2) AS avg_score
 FROM progression_entries
-GROUP BY user_id, sport, DATE_TRUNC('month', date);
+GROUP BY 1, 2, 3;

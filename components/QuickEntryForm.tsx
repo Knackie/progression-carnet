@@ -12,7 +12,7 @@ import { exampleFor } from '@/lib/sportExamples';
 export interface EntryPrefill {
   sport?: Sport;
   date?: string;
-  matchResult?: 'win' | 'loss';
+  matchResult?: 'win' | 'loss' | 'draw';
   pointsDelta?: number;
   notes?: string;
 }

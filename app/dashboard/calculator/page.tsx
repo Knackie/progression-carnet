@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import ChessCalculator from '@/components/ChessCalculator';
+import type { Sport } from '@/lib/types';
 import {
   COMPETITION_COEFFICIENTS,
   Discipline,
@@ -31,6 +33,7 @@ const digitsOnly = (v: string) => v.replace(/\D/g, '').slice(0, 4);
 export default function CalculatorPage() {
   const router = useRouter();
   const [discipline, setDiscipline] = useState<Discipline>('simple');
+  const [sport, setSport] = useState<Sport>('badminton');
   const [myRating, setMyRating] = useState('');
   const [partner, setPartner] = useState('');
   const [opponent, setOpponent] = useState('');
@@ -110,7 +113,29 @@ export default function CalculatorPage() {
           <span>Tableau de bord</span>
         </Link>
 
-        <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-1">🧮 Calcul des points</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-3">🧮 Calcul des points</h1>
+
+        <div className="flex gap-2 mb-5">
+          {([
+            ['badminton', '🏸 Badminton'],
+            ['chess', '♟️ Échecs'],
+          ] as [Sport, string][]).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setSport(value)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                sport === value ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 shadow hover:bg-gray-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {sport === 'chess' ? (
+          <ChessCalculator />
+        ) : (
+        <>
         <p className="text-sm text-gray-500 mb-5">
           Barème FFBaD 2025-2026. Votre cote est sur MyFFBaD (Poona), dans chaque discipline.
         </p>
@@ -241,6 +266,8 @@ export default function CalculatorPage() {
             </>
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
