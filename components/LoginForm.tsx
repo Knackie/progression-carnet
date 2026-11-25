@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { signInWithEmail } from '@/app/auth/actions';
+import GoogleButton from '@/components/GoogleButton';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -114,6 +115,8 @@ export default function LoginForm() {
           <span className="px-2 bg-white text-gray-500">Ou</span>
         </div>
       </div>
+
+      <GoogleButton />
 
       {/* Sign Up Link */}
       <p className="text-center text-gray-700">

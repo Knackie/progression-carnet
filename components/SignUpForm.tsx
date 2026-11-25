@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import GoogleButton from '@/components/GoogleButton';
 
 export default function SignUpForm() {
   const [email, setEmail] = useState('');
@@ -121,6 +122,8 @@ export default function SignUpForm() {
           <span className="px-2 bg-white text-gray-500">Ou</span>
         </div>
       </div>
+
+      <GoogleButton label="S'inscrire avec Google" />
 
       {/* Login Link */}
       <p className="text-center text-gray-700">
