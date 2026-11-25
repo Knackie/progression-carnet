@@ -76,7 +76,8 @@ export default function ChessCalculator() {
     const params = new URLSearchParams({
       sport: 'chess',
       result,
-      note: `Adversaire : ${opponentElo} Elo (${delta >= 0 ? '+' : ''}${delta} Elo)`,
+      points: String(delta),
+      note: `Adversaire : ${opponentElo} Elo`,
     });
     router.push(`/dashboard?${params}`);
   };

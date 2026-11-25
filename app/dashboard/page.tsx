@@ -35,7 +35,7 @@ export default function DashboardPage() {
     setPrefill({
       sport: chess ? 'chess' : 'badminton',
       matchResult: result,
-      pointsDelta: !chess && params.get('points') !== null && Number.isFinite(points) ? points : undefined,
+      pointsDelta: params.get('points') !== null && Number.isFinite(points) ? points : undefined,
       notes: params.get('note') ?? undefined,
     });
     window.history.replaceState(null, '', '/dashboard');

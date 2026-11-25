@@ -98,7 +98,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
     if (opponentName.trim() || entry.opponent_name) payload.opponent_name = opponentName;
     if (gamePlan.trim() || entry.game_plan) payload.game_plan = gamePlan;
     if (goals.length || entry.match_goals?.length) payload.match_goals = goals;
-    const points = isBadmintonMatch ? parsePointsDelta(pointsDelta) : null;
+    const points = entryType === 'match' ? parsePointsDelta(pointsDelta) : null;
     if (points != null || entry.points_delta != null) payload.points_delta = points;
     return payload;
   };
@@ -301,9 +301,9 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                 </select>
                 )}
               </div>
-              {isBadmintonMatch && (
+              {entryType === 'match' && (
                 <div className="mt-4">
-                  <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} />
+                  <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} sport={selectedSport} />
                 </div>
               )}
             </div>

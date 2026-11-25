@@ -296,9 +296,9 @@ export default function EntriesList() {
                         ? 'text-green-700 bg-green-50 dark:bg-green-500/15 dark:text-green-300'
                         : 'text-red-700 bg-red-50 dark:bg-red-500/15 dark:text-red-300'
                     }`}
-                    title="Points de classement FFBaD"
+                    title={entry.sport === 'chess' ? 'Variation d’Elo' : 'Points de classement FFBaD'}
                   >
-                    {formatPoints(entry.points_delta)} pts
+                    {formatPoints(entry.points_delta)} {entry.sport === 'chess' ? 'Elo' : 'pts'}
                   </div>
                 )}
                 {/* Action Buttons */}

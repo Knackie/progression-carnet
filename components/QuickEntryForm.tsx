@@ -77,7 +77,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? derivedResult ?? matchResult : null,
           set_scores: parsed.sets.length ? parsed.sets : null,
-          points_delta: isBadmintonMatch ? parsePointsDelta(pointsDelta) : null,
+          points_delta: entryType === 'match' ? parsePointsDelta(pointsDelta) : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -276,6 +276,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
                         <option value="loss">😔 Perte</option>
                       </select>
                     </div>
+                    <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} sport="chess" />
                   </>
                 )}
               </div>

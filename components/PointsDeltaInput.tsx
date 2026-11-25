@@ -5,19 +5,21 @@ import Link from 'next/link';
 interface PointsDeltaInputProps {
   value: string;
   onChange: (value: string) => void;
+  sport?: 'badminton' | 'chess';
 }
 
-export default function PointsDeltaInput({ value, onChange }: PointsDeltaInputProps) {
+export default function PointsDeltaInput({ value, onChange, sport = 'badminton' }: PointsDeltaInputProps) {
+  const chess = sport === 'chess';
   return (
     <div>
-      <label className="block text-sm font-bold text-orange-900 mb-2">Points de classement</label>
+      <label className="block text-sm font-bold text-orange-900 mb-2">{chess ? 'Variation d’Elo' : 'Points de classement'}</label>
       <div className="flex gap-2">
         <input
           type="text"
           inputMode="numeric"
           value={value}
           onChange={e => onChange(e.target.value.replace(/[^\d-]/g, '').replace(/(?!^)-/g, '').slice(0, 4))}
-          placeholder="ex : 32 ou -10"
+          placeholder={chess ? 'ex : 8 ou -6' : 'ex : 32 ou -10'}
           className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
         <Link
