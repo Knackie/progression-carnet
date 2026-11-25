@@ -25,12 +25,21 @@ interface PlayerProfileData {
   target_ranking?: string;
   chess_current_ranking?: string;
   chess_target_ranking?: string;
+  badminton_current_points?: number | string | null;
+  badminton_target_points?: number | string | null;
   chess_profile?: SportDetails;
   key_strengths?: string[];
   key_weaknesses?: string[];
   improvement_focus?: string[];
   bio?: string;
 }
+
+// Omitted when untouched/empty, null to clear a saved value
+const parsePoints = (value: number | string | null | undefined, saved: number | string | null | undefined) => {
+  const n = Number(String(value ?? '').trim().replace(',', '.'));
+  if (String(value ?? '').trim() === '' || Number.isNaN(n)) return saved != null ? null : undefined;
+  return n;
+};
 
 interface PlayerProfileProps {
   startEditing?: boolean;
@@ -169,6 +178,8 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
           ...formData,
           // Omitted when empty (works before the column exists), null to clear a saved one
           target_ranking: formData.target_ranking?.trim().toUpperCase() || (profile?.target_ranking ? null : undefined),
+          badminton_current_points: parsePoints(formData.badminton_current_points, profile?.badminton_current_points),
+          badminton_target_points: parsePoints(formData.badminton_target_points, profile?.badminton_target_points),
           chess_current_ranking: formData.chess_current_ranking?.trim() || (profile?.chess_current_ranking ? null : undefined),
           chess_target_ranking: formData.chess_target_ranking?.trim() || (profile?.chess_target_ranking ? null : undefined),
           key_strengths: formData.key_strengths?.filter(s => s.trim()),
@@ -392,6 +403,33 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                   placeholder="Ex: R6"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">📊 Mes points (cote)</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name="badminton_current_points"
+                  value={formData.badminton_current_points ?? ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Ex: 420"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">🚩 Points pour l&apos;objectif</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name="badminton_target_points"
+                  value={formData.badminton_target_points ?? ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Ex: 600"
+                />
+              </div>
+              <p className="col-span-2 text-xs text-indigo-800">
+                Cote et seuil du classement visé : à lire sur Poona / Badnet (la FFBaD les change chaque saison).
+              </p>
               <datalist id="badminton-ranks">
                 {BADMINTON_RANKS.map(rank => (
                   <option key={rank} value={rank} />

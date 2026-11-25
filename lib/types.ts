@@ -50,6 +50,8 @@ export interface PlayerProfile {
   target_ranking?: string; // Classement visé (ex: R6)
   chess_current_ranking?: string; // Elo actuel aux échecs
   chess_target_ranking?: string; // Elo visé aux échecs
+  badminton_current_points?: number | string | null; // Cote actuelle FFBaD
+  badminton_target_points?: number | string | null; // Cote nécessaire pour le classement visé
   chess_profile?: SportDetails; // Style, objectif, forces… côté échecs
   key_strengths?: string[]; // Points forts majeurs
   key_weaknesses?: string[]; // Points faibles majeurs

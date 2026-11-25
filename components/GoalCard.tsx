@@ -26,6 +26,8 @@ interface GoalEntry {
 
 interface Profile {
   updated_at?: string | null;
+  badminton_current_points?: number | string | null;
+  badminton_target_points?: number | string | null;
   sports?: string[];
   current_ranking?: string | null;
   target_ranking?: string | null;
@@ -75,6 +77,11 @@ export default function GoalCard() {
   const eloCurrent = findElo(profile?.chess_current_ranking) ?? (badmintonCurrent ? null : findElo(profile?.current_ranking));
   const eloTarget = findElo(profile?.chess_target_ranking);
 
+  const num = (v: number | string | null | undefined) => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+  const pointsCurrent = num(profile?.badminton_current_points);
+  const pointsTarget = num(profile?.badminton_target_points);
+  const since = profile?.updated_at ? localDate(new Date(profile.updated_at)) : null;
+
   const showBadminton = badmintonPath.length > 0;
   const showChess = eloCurrent != null && eloTarget != null && eloTarget > eloCurrent;
 
@@ -113,13 +120,24 @@ export default function GoalCard() {
           target={badmintonTarget}
           month={done.filter(e => e.sport === 'badminton' && e.date.startsWith(monthPrefix))}
           monthName={monthName}
+          points={
+            pointsCurrent != null && pointsTarget != null && pointsTarget > pointsCurrent
+              ? {
+                  current: pointsCurrent,
+                  target: pointsTarget,
+                  since,
+                  today,
+                  games: done.filter(e => e.sport === 'badminton' && e.entry_type === 'match'),
+                }
+              : null
+          }
         />
       )}
       {showChess && eloCurrent != null && eloTarget != null && (
         <ChessGoal
           current={eloCurrent}
           target={eloTarget}
-          since={profile?.updated_at ? localDate(new Date(profile.updated_at)) : null}
+          since={since}
           today={today}
           games={done.filter(e => e.sport === 'chess' && e.entry_type === 'match')}
           month={done.filter(e => e.sport === 'chess' && e.date.startsWith(monthPrefix))}
@@ -175,7 +193,15 @@ function weaknessLine(month: GoalEntry[]) {
   );
 }
 
-function BadmintonGoal({ path, target, month, monthName }: { path: string[]; target: string; month: GoalEntry[]; monthName: string }) {
+interface PointsGoal {
+  current: number;
+  target: number;
+  since: string | null;
+  today: string;
+  games: GoalEntry[];
+}
+
+function BadmintonGoal({ path, target, month, monthName, points }: { path: string[]; target: string; month: GoalEntry[]; monthName: string; points: PointsGoal | null }) {
   const current = path[0];
   const matches = month.filter(e => e.entry_type === 'match');
   const wins = matches.filter(e => e.match_result === 'win').length;
@@ -212,6 +238,19 @@ function BadmintonGoal({ path, target, month, monthName }: { path: string[]; tar
           </div>
         ))}
       </div>
+
+      {points ? (
+        <ProgressCurve
+          icon="🏸"
+          unit="pts"
+          {...points}
+          hint="Renseignez les points gagnés ou perdus sur vos matchs pour voir la courbe avancer vers le seuil."
+        />
+      ) : (
+        <p className="text-xs text-gray-500 mb-4">
+          Ajoutez vos points actuels et ceux du classement visé dans le profil pour afficher la courbe de progression.
+        </p>
+      )}
 
       <p className="text-sm font-semibold text-gray-700 mb-2">Bilan de {monthName} (badminton)</p>
       {month.length === 0 ? (
@@ -254,66 +293,28 @@ function ChessGoal({
   month: GoalEntry[];
   monthName: string;
 }) {
-  const { isDark } = useTheme();
   const matches = month.filter(e => e.entry_type === 'match');
   const wins = matches.filter(e => e.match_result === 'win').length;
   const draws = matches.filter(e => e.match_result === 'draw').length;
   const losses = matches.filter(e => e.match_result === 'loss').length;
   const trainings = month.length - matches.length;
 
-  // The profile Elo is the starting point; Elo changes of later games move it
-  const deltaByDay = new Map<string, number>();
-  games.forEach(g => {
-    if (g.points_delta == null || (since && g.date <= since)) return;
-    deltaByDay.set(g.date, (deltaByDay.get(g.date) ?? 0) + g.points_delta);
-  });
-  let elo = current;
-  const curve: { label: string; elo: number }[] = [{ label: shortDate(since ?? today), elo }];
-  [...deltaByDay.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([date, delta]) => {
-      elo += delta;
-      curve.push({ label: shortDate(date), elo });
-    });
-  if (deltaByDay.size > 0 && !deltaByDay.has(today)) curve.push({ label: shortDate(today), elo });
-  const estimated = elo;
-  const low = Math.min(...curve.map(p => p.elo), target);
-  const axisColor = isDark ? '#9ca3af' : '#6b7280';
-
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
       <div className="flex items-baseline justify-between gap-2 mb-3">
         <h3 className="text-lg sm:text-xl font-bold text-gray-800">🎯 Objectif {target} Elo</h3>
-        <span className="text-sm text-gray-500">
-          {estimated >= target ? '🏆 atteint !' : `encore +${target - estimated} Elo`}
-        </span>
       </div>
 
-      <p className="text-base font-bold text-purple-600 mb-2">
-        ♟️ {estimated} → {target}
-        {estimated !== current && <span className="text-xs font-normal text-gray-500"> (profil : {current})</span>}
-      </p>
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={curve} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-          <XAxis dataKey="label" stroke={axisColor} style={{ fontSize: '11px' }} />
-          <YAxis
-            domain={[Math.floor((low - 20) / 10) * 10, Math.ceil((Math.max(estimated, target) + 20) / 10) * 10]}
-            stroke={axisColor}
-            style={{ fontSize: '11px' }}
-            width={45}
-          />
-          <Tooltip formatter={value => [`${value} Elo`, 'Elo']} />
-          <ReferenceLine y={target} stroke="#16a34a" strokeDasharray="5 5" label={{ value: 'Objectif', fill: '#16a34a', fontSize: 11, position: 'insideTopLeft' }} />
-          <Line type="monotone" dataKey="elo" stroke="#7c3aed" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4 }} />
-        </LineChart>
-      </ResponsiveContainer>
-      {deltaByDay.size === 0 && (
-        <p className="text-xs text-gray-500 mb-4">
-          Renseignez la variation d’Elo de vos parties (calculatrice → « Entrée ») pour voir la courbe avancer vers l’objectif.
-        </p>
-      )}
-      <div className="mb-4" />
+      <ProgressCurve
+        icon="♟️"
+        unit="Elo"
+        current={current}
+        target={target}
+        since={since}
+        today={today}
+        games={games}
+        hint="Renseignez la variation d’Elo de vos parties (calculatrice → « Entrée ») pour voir la courbe avancer vers l’objectif."
+      />
 
       <p className="text-sm font-semibold text-gray-700 mb-2">Bilan de {monthName} (échecs)</p>
       {month.length === 0 ? (
@@ -328,6 +329,76 @@ function ChessGoal({
       )}
       {weaknessLine(month)}
     </div>
+  );
+}
+
+// Starts from the value saved in the profile; points/Elo deltas of later games move it
+function ProgressCurve({
+  icon,
+  unit,
+  current,
+  target,
+  since,
+  today,
+  games,
+  hint,
+}: {
+  icon: string;
+  unit: string;
+  current: number;
+  target: number;
+  since: string | null;
+  today: string;
+  games: GoalEntry[];
+  hint: string;
+}) {
+  const { isDark } = useTheme();
+  const round = (n: number) => Math.round(n * 100) / 100;
+  const deltaByDay = new Map<string, number>();
+  games.forEach(g => {
+    if (g.points_delta == null || (since && g.date <= since)) return;
+    deltaByDay.set(g.date, (deltaByDay.get(g.date) ?? 0) + g.points_delta);
+  });
+  let value = current;
+  const curve: { label: string; value: number }[] = [{ label: shortDate(since ?? today), value }];
+  [...deltaByDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([date, delta]) => {
+      value = round(value + delta);
+      curve.push({ label: shortDate(date), value });
+    });
+  if (deltaByDay.size > 0 && !deltaByDay.has(today)) curve.push({ label: shortDate(today), value });
+  const estimated = value;
+  const span = Math.max(Math.abs(target - current), 10);
+  const pad = span * 0.1;
+  const low = Math.min(...curve.map(p => p.value), target) - pad;
+  const high = Math.max(estimated, target) + pad;
+  const axisColor = isDark ? '#9ca3af' : '#6b7280';
+
+  return (
+    <>
+      <div className="flex items-baseline justify-between gap-2 mb-2">
+        <p className="text-base font-bold text-purple-600">
+          {icon} {estimated} → {target}
+          {estimated !== current && <span className="text-xs font-normal text-gray-500"> (profil : {current})</span>}
+        </p>
+        <span className="text-sm text-gray-500">
+          {estimated >= target ? '🏆 atteint !' : `encore +${round(target - estimated)} ${unit}`}
+        </span>
+      </div>
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart data={curve} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
+          <XAxis dataKey="label" stroke={axisColor} style={{ fontSize: '11px' }} />
+          <YAxis domain={[Math.floor(low), Math.ceil(high)]} allowDecimals={false} stroke={axisColor} style={{ fontSize: '11px' }} width={45} />
+          <Tooltip formatter={v => [`${v} ${unit}`, unit]} />
+          <ReferenceLine y={target} stroke="#16a34a" strokeDasharray="5 5" label={{ value: 'Objectif', fill: '#16a34a', fontSize: 11, position: 'insideTopLeft' }} />
+          <Line type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+      {deltaByDay.size === 0 && <p className="text-xs text-gray-500">{hint}</p>}
+      <div className="mb-4" />
+    </>
   );
 }
 
