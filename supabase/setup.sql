@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS progression_entries (
 ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS opponent_level VARCHAR(50);
 ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS match_result VARCHAR(20)
   CHECK (match_result IN ('win', 'loss', 'draw'));
+-- Badminton: [[moi, adversaire], ...] par set, ex. [[15,12],[13,15],[15,10]]
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS set_scores JSONB;
 
 CREATE INDEX IF NOT EXISTS progression_entries_user_id_idx ON progression_entries(user_id);
 CREATE INDEX IF NOT EXISTS progression_entries_user_sport_date_idx ON progression_entries(user_id, sport, date DESC);

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Sport } from '@/lib/types';
 import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
+import { EMPTY_SETS, SetInput, matchWinner, parseSets } from '@/lib/badmintonScore';
+import SetScoresInput from './SetScoresInput';
 
 interface QuickEntryFormProps {
   onEntryCreated?: () => void;
@@ -22,6 +24,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
   const [score, setScore] = useState('5');
   const [opponentLevel, setOpponentLevel] = useState('');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>('win');
+  const [setInputs, setSetInputs] = useState<SetInput[]>(EMPTY_SETS);
   const [notes, setNotes] = useState('');
   const [strengths, setStrengths] = useState(['', '', '']);
   const [weaknesses, setWeaknesses] = useState(['', '', '']);
@@ -31,12 +34,26 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const isBadmintonMatch = entryType === 'match' && selectedSport === 'badminton';
+
+  const handleSetsChange = (value: SetInput[]) => {
+    setSetInputs(value);
+    const winner = matchWinner(parseSets(value).sets);
+    if (winner) setMatchResult(winner);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccess(false);
 
+    const parsed = isBadmintonMatch ? parseSets(setInputs) : { sets: [], error: null };
+    if (parsed.error) {
+      setError(parsed.error);
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await authFetch('/api/entries', {
         method: 'POST',
@@ -46,9 +63,10 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
           date,
           entry_type: entryType,
           notes,
-          score: entryType === 'match' ? parseInt(score) : null,
+          score: parseInt(score),
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
+          set_scores: parsed.sets.length ? parsed.sets : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -66,6 +84,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
       setScore('5');
       setOpponentLevel('');
       setMatchResult('win');
+      setSetInputs(EMPTY_SETS);
       setStrengths(['', '', '']);
       setWeaknesses(['', '', '']);
       setAxes(['', '', '']);
@@ -153,26 +172,24 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
                 />
               </div>
 
-              {entryType === 'match' && (
-                <div>
-                  <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={score}
-                      onChange={(e) => setScore(e.target.value)}
-                      className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      style={{
-                        backgroundSize: `${(parseInt(score) / 10) * 100}% 100%`,
-                        backgroundImage: `linear-gradient(to right, #2563eb 0%, #2563eb ${(parseInt(score) / 10) * 100}%, #bfdbfe ${(parseInt(score) / 10) * 100}%, #bfdbfe 100%)`,
-                      }}
-                    />
-                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit text-lg">{score}/10</div>
-                  </div>
+              <div>
+                <label className="block text-sm font-bold text-blue-900 mb-2">Note de la séance</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={score}
+                    onChange={(e) => setScore(e.target.value)}
+                    className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    style={{
+                      backgroundSize: `${(parseInt(score) / 10) * 100}% 100%`,
+                      backgroundImage: `linear-gradient(to right, #2563eb 0%, #2563eb ${(parseInt(score) / 10) * 100}%, #bfdbfe ${(parseInt(score) / 10) * 100}%, #bfdbfe 100%)`,
+                    }}
+                  />
+                  <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit text-lg">{score}/10</div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -208,6 +225,11 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
           {entryType === 'match' && (
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
               <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>
+              {isBadmintonMatch && (
+                <div className="mb-4">
+                  <SetScoresInput value={setInputs} onChange={handleSetsChange} />
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {selectedSport === 'badminton' ? (
                   <>

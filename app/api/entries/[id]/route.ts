@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { validateSetScores } from '@/lib/badmintonScore';
 
 export async function PUT(
   request: NextRequest,
@@ -8,7 +9,11 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { sport, date, entry_type, notes, score, match_result, strengths, weaknesses, improvement_axes } = body;
+    const { sport, date, entry_type, notes, score, opponent_level, match_result, strengths, weaknesses, improvement_axes } = body;
+    const { sets: set_scores, error: setsError } = validateSetScores(body.set_scores);
+    if (setsError) {
+      return NextResponse.json({ error: setsError }, { status: 400 });
+    }
 
     // Get auth header
     const authHeader = request.headers.get('Authorization');
@@ -50,8 +55,11 @@ export async function PUT(
         date,
         entry_type,
         notes,
-        score: score || null,
+        score: score ?? null,
+        opponent_level: opponent_level || null,
         match_result: match_result || null,
+        // Sent as null to clear removed sets, omitted when the client didn't send the field
+        ...('set_scores' in body ? { set_scores } : {}),
         strengths: strengths || [],
         weaknesses: weaknesses || [],
         improvement_axes: improvement_axes || [],

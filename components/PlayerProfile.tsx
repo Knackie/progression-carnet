@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sport, PlayerProfile as SavedProfile } from '@/lib/types';
 import { authFetch } from '@/lib/authFetch';
+import { padToThree } from '@/lib/form';
 import { BADMINTON_RANKS } from '@/lib/rankings';
 
 interface PlayerProfileData {
@@ -26,8 +27,6 @@ interface PlayerProfileProps {
   onSaved?: (profile: SavedProfile) => void;
   onClose?: () => void;
 }
-
-const padToThree = (values?: string[]) => [...(values ?? []), '', '', ''].slice(0, Math.max(3, values?.length ?? 0));
 
 export default function PlayerProfile({ startEditing = false, onSaved, onClose }: PlayerProfileProps = {}) {
   const [isEditing, setIsEditing] = useState(startEditing);

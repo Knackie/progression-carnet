@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Sport } from '@/lib/types';
 import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS, isKnownLevel, legacyLevelLabel } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
+import { padToThree } from '@/lib/form';
+import { SetInput, SetScore, matchWinner, parseSets, toSetInputs } from '@/lib/badmintonScore';
+import SetScoresInput from './SetScoresInput';
 
 interface EditEntryModalProps {
   entry: {
@@ -14,6 +17,7 @@ interface EditEntryModalProps {
     score?: number | null;
     opponent_level?: string | null;
     match_result?: 'win' | 'loss' | 'draw' | null;
+    set_scores?: SetScore[] | null;
     notes: string;
     strengths: string[];
     weaknesses: string[];
@@ -53,13 +57,14 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   const [selectedSport, setSelectedSport] = useState<Sport>(entry.sport);
   const [entryType, setEntryType] = useState<'match' | 'training'>(entry.entry_type);
   const [date, setDate] = useState(entry.date);
-  const [score, setScore] = useState<number>(entry.score || 5);
+  const [score, setScore] = useState<number>(entry.score ?? 5);
   const [opponentLevel, setOpponentLevel] = useState(entry.opponent_level || '');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>(entry.match_result || 'win');
+  const [setInputs, setSetInputs] = useState<SetInput[]>(toSetInputs(entry.set_scores));
   const [notes, setNotes] = useState(entry.notes);
-  const [strengths, setStrengths] = useState<string[]>(entry.strengths || ['', '', '']);
-  const [weaknesses, setWeaknesses] = useState<string[]>(entry.weaknesses || ['', '', '']);
-  const [axes, setAxes] = useState<string[]>(entry.improvement_axes || ['', '', '']);
+  const [strengths, setStrengths] = useState<string[]>(padToThree(entry.strengths));
+  const [weaknesses, setWeaknesses] = useState<string[]>(padToThree(entry.weaknesses));
+  const [axes, setAxes] = useState<string[]>(padToThree(entry.improvement_axes));
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,22 +74,42 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
       setSelectedSport(entry.sport);
       setEntryType(entry.entry_type);
       setDate(entry.date);
-      setScore(entry.score || 5);
+      setScore(entry.score ?? 5);
       setOpponentLevel(entry.opponent_level || '');
       setMatchResult(entry.match_result || 'win');
+      setSetInputs(toSetInputs(entry.set_scores));
       setNotes(entry.notes);
-      setStrengths(entry.strengths || ['', '', '']);
-      setWeaknesses(entry.weaknesses || ['', '', '']);
-      setAxes(entry.improvement_axes || ['', '', '']);
+      setStrengths(padToThree(entry.strengths));
+      setWeaknesses(padToThree(entry.weaknesses));
+      setAxes(padToThree(entry.improvement_axes));
       setError('');
     }
   }, [isOpen, entry]);
 
+  const isBadmintonMatch = entryType === 'match' && selectedSport === 'badminton';
+
+  const handleSetsChange = (value: SetInput[]) => {
+    setSetInputs(value);
+    const winner = matchWinner(parseSets(value).sets);
+    if (winner) setMatchResult(winner);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    const parsed = isBadmintonMatch ? parseSets(setInputs) : { sets: [], error: null };
+    if (parsed.error) {
+      setError(parsed.error);
+      return;
+    }
+    // Only send the field when there is something to save or to clear
+    const setScoresField =
+      parsed.sets.length || entry.set_scores?.length
+        ? { set_scores: parsed.sets.length ? parsed.sets : null }
+        : {};
+
+    setLoading(true);
     try {
       const response = await authFetch(`/api/entries/${entry.id}`, {
         method: 'PUT',
@@ -94,9 +119,10 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           date,
           entry_type: entryType,
           notes,
-          score: entryType === 'match' ? score : null,
+          score,
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
+          ...setScoresField,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -182,22 +208,20 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                 />
               </div>
 
-              {entryType === 'match' && (
-                <div>
-                  <label className="block text-sm font-bold text-blue-900 mb-2">Score</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={score}
-                      onChange={(e) => setScore(parseInt(e.target.value))}
-                      className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
-                  </div>
+              <div>
+                <label className="block text-sm font-bold text-blue-900 mb-2">Note de la séance</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={score}
+                    onChange={(e) => setScore(parseInt(e.target.value))}
+                    className="flex-1 h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="bg-blue-600 text-white font-bold px-3 py-2 rounded-lg min-w-fit">{score}/10</div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -237,6 +261,11 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           {entryType === 'match' && (
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
               <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>
+              {isBadmintonMatch && (
+                <div className="mb-4">
+                  <SetScoresInput value={setInputs} onChange={handleSetsChange} />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-bold text-orange-900 mb-2">Résultat</label>
                 <select

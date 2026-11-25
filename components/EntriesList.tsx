@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import EditEntryModal from './EditEntryModal';
 import { legacyLevelLabel } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
+import { SetScore, formatSets } from '@/lib/badmintonScore';
 
 interface Entry {
   id: string;
@@ -13,6 +14,7 @@ interface Entry {
   score?: number | null;
   opponent_level?: string | null;
   match_result?: 'win' | 'loss' | 'draw' | null;
+  set_scores?: SetScore[] | null;
   notes: string;
   strengths: string[];
   weaknesses: string[];
@@ -159,12 +161,18 @@ export default function EntriesList() {
                     day: 'numeric',
                   })}
                 </p>
+                {entry.set_scores && entry.set_scores.length > 0 && (
+                  <p className="mt-1 font-mono font-bold text-gray-800 tracking-wide">
+                    🏸 {formatSets(entry.set_scores)}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2 items-end shrink-0">
                 {entry.score != null && (
-                  <div className="text-center bg-blue-50 dark:bg-blue-500/15 rounded-lg px-3 py-2">
+                  <div className="text-center bg-blue-50 dark:bg-blue-500/15 rounded-lg px-3 py-1" title="Note de la séance">
                     <span className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-300">{entry.score}</span>
                     <span className="text-xs text-gray-600">/10</span>
+                    <span className="block text-[10px] uppercase tracking-wide text-gray-500">note</span>
                   </div>
                 )}
                 {entry.entry_type === 'match' && entry.match_result && (
