@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const entries = (allEntries ?? []).filter(e => e.status !== 'planned');
+    const sport = request.nextUrl.searchParams.get('sport');
+    const entries = (allEntries ?? []).filter(e => e.status !== 'planned' && (!sport || e.sport === sport));
 
     if (entries.length === 0) {
       return NextResponse.json({

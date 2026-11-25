@@ -34,19 +34,11 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadProfileAndStats = async () => {
       try {
-        const [profileResponse, statsResponse] = await Promise.all([
-          authFetch('/api/player-profile'),
-          authFetch('/api/entries/stats'),
-        ]);
+        const profileResponse = await authFetch('/api/player-profile');
 
         if (profileResponse.ok) {
           const { data } = await profileResponse.json();
           setProfile(data);
-        }
-
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          setStats(statsData);
         }
 
         setError('');
@@ -64,6 +56,20 @@ export default function ProfilePage() {
 
     loadProfileAndStats();
   }, [router]);
+
+  const statsSport = viewSport && profile?.sports?.includes(viewSport) ? viewSport : profile?.sports?.[0];
+
+  useEffect(() => {
+    if (!profile) return;
+    (async () => {
+      try {
+        const res = await authFetch(`/api/entries/stats${statsSport ? `?sport=${statsSport}` : ''}`);
+        if (res.ok) setStats(await res.json());
+      } catch {
+        // Stats are optional on this page
+      }
+    })();
+  }, [profile, statsSport]);
 
   const handleProfileSaved = (saved: PlayerProfileType) => {
     setProfile(saved);
