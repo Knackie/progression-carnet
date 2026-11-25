@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import PlayerProfile from '@/components/PlayerProfile';
-import { PlayerProfile as PlayerProfileType } from '@/lib/types';
+import { PlayerProfile as PlayerProfileType, Sport } from '@/lib/types';
+import { SPORT_LABELS, sportDetails } from '@/lib/sportProfile';
 import { findBadmintonRank, nextBadmintonRank } from '@/lib/rankings';
 import { authFetch, SessionExpiredError } from '@/lib/authFetch';
 
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [viewSport, setViewSport] = useState<Sport | null>(null);
 
   useEffect(() => {
     const loadProfileAndStats = async () => {
@@ -115,6 +117,8 @@ export default function ProfilePage() {
   }
 
   const sports = profile.sports ?? [];
+  const activeSport: Sport = viewSport && sports.includes(viewSport) ? viewSport : sports[0] ?? 'badminton';
+  const details = sportDetails(profile, activeSport);
   const sportEmoji = sports.map(s => (s === 'badminton' ? '🏸' : '♟️')).join(' ') || '🏅';
   const sportLabel = sports.map(s => (s === 'badminton' ? 'Badminton' : 'Échecs')).join(', ') || 'Aucun sport';
   const nextRank = profile.current_ranking ? nextBadmintonRank(profile.current_ranking) : null;
@@ -191,28 +195,44 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {sports.length > 1 && (
+            <div className="flex gap-2 mb-8">
+              {sports.map(s => (
+                <button
+                  key={s}
+                  onClick={() => setViewSport(s)}
+                  className={`flex-1 px-4 py-3 rounded-xl font-bold transition ${
+                    activeSport === s ? 'bg-indigo-600 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {SPORT_LABELS[s]}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Infos carrière */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
-            {profile.playing_style && (
+            {details.playing_style && (
               <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-6 border-2 border-indigo-200">
                 <h3 className="text-lg font-bold text-indigo-900 mb-3">🎮 Style de Jeu</h3>
-                <p className="text-indigo-800 text-lg">{profile.playing_style}</p>
+                <p className="text-indigo-800 text-lg">{details.playing_style}</p>
               </div>
             )}
-            {profile.season_objective && (
+            {details.season_objective && (
               <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border-2 border-amber-200">
                 <h3 className="text-lg font-bold text-amber-900 mb-3">🎯 Objectif de Saison</h3>
-                <p className="text-amber-800 text-lg">{profile.season_objective}</p>
+                <p className="text-amber-800 text-lg">{details.season_objective}</p>
               </div>
             )}
           </div>
 
           {/* Points Forts */}
-          {profile.key_strengths && profile.key_strengths.length > 0 && (
+          {details.key_strengths && details.key_strengths.length > 0 && (
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border-2 border-green-200 mb-6">
               <h3 className="text-lg font-bold text-green-900 mb-4">💪 3 Points Forts</h3>
               <div className="grid md:grid-cols-3 gap-4">
-                {profile.key_strengths.map((strength, i) => (
+                {details.key_strengths.map((strength, i) => (
                   <div
                     key={i}
                     className="bg-white rounded-xl p-4 border-2 border-green-300 shadow-sm hover:shadow-md transition"
@@ -226,11 +246,11 @@ export default function ProfilePage() {
           )}
 
           {/* Points Faibles */}
-          {profile.key_weaknesses && profile.key_weaknesses.length > 0 && (
+          {details.key_weaknesses && details.key_weaknesses.length > 0 && (
             <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border-2 border-red-200 mb-6">
               <h3 className="text-lg font-bold text-red-900 mb-4">⚠️ 3 Points Faibles</h3>
               <div className="grid md:grid-cols-3 gap-4">
-                {profile.key_weaknesses.map((weakness, i) => (
+                {details.key_weaknesses.map((weakness, i) => (
                   <div
                     key={i}
                     className="bg-white rounded-xl p-4 border-2 border-red-300 shadow-sm hover:shadow-md transition"
@@ -244,11 +264,11 @@ export default function ProfilePage() {
           )}
 
           {/* Axes de Progression */}
-          {profile.improvement_focus && profile.improvement_focus.length > 0 && (
+          {details.improvement_focus && details.improvement_focus.length > 0 && (
             <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-6 border-2 border-yellow-200 mb-6">
               <h3 className="text-lg font-bold text-yellow-900 mb-4">🎯 3 Axes de Progression</h3>
               <div className="grid md:grid-cols-3 gap-4">
-                {profile.improvement_focus.map((axis, i) => (
+                {details.improvement_focus.map((axis, i) => (
                   <div
                     key={i}
                     className="bg-white rounded-xl p-4 border-2 border-yellow-300 shadow-sm hover:shadow-md transition"
@@ -297,11 +317,27 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Classement FFBaD */}
+        {/* Classement */}
         <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-3xl p-8 shadow-xl text-white text-center mb-8">
           <div className="text-6xl mb-4">🏆</div>
-          <h2 className="text-3xl font-bold mb-2">Votre Classement</h2>
-          {profile.current_ranking ? (
+          <h2 className="text-3xl font-bold mb-2">{activeSport === 'chess' ? 'Votre Elo' : 'Votre Classement'}</h2>
+          {activeSport === 'chess' ? (
+            profile.chess_current_ranking ? (
+              <>
+                <div className="text-5xl font-bold mb-4">{profile.chess_current_ranking}</div>
+                {profile.chess_target_ranking && (
+                  <p className="text-xl font-semibold">
+                    Objectif : <span className="font-black">{profile.chess_target_ranking}</span>
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="text-5xl font-bold mb-4">-</div>
+                <p className="text-lg opacity-90">Renseignez votre Elo dans votre profil.</p>
+              </>
+            )
+          ) : profile.current_ranking ? (
             <>
               <div className="text-5xl font-bold mb-4">{profile.current_ranking}</div>
               {nextRank && (
@@ -312,9 +348,6 @@ export default function ProfilePage() {
                   )}
                 </p>
               )}
-              {profile.season_objective && (
-                <p className="text-lg opacity-90 mt-2">🎯 {profile.season_objective}</p>
-              )}
             </>
           ) : (
             <>
@@ -322,13 +355,10 @@ export default function ProfilePage() {
               <p className="text-lg opacity-90">Renseignez votre classement dans votre profil.</p>
             </>
           )}
-          {profile.chess_current_ranking && (
-            <p className="text-xl font-semibold mt-4">
-              ♟️ Elo : <span className="font-black">{profile.chess_current_ranking}</span>
-              {profile.chess_target_ranking && <> · Objectif : <span className="font-black">{profile.chess_target_ranking}</span></>}
-            </p>
+          {details.season_objective && (
+            <p className="text-lg opacity-90 mt-2">🎯 {details.season_objective}</p>
           )}
-          {stats && stats.total > 0 && (
+          {sports.length < 2 && stats && stats.total > 0 && (
             <p className="text-lg opacity-90 mt-4">
               Forme : <span className="font-bold">{stats.winRate}%</span> de victoires sur <span className="font-bold">{stats.total}</span> matchs
             </p>

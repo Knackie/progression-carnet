@@ -6,6 +6,11 @@ import { authFetch } from '@/lib/authFetch';
 import { padToThree } from '@/lib/form';
 import { exampleForSports, playStyleExample, seasonGoalExample } from '@/lib/sportExamples';
 import { BADMINTON_RANKS, CHESS_ELO_SUGGESTIONS } from '@/lib/rankings';
+import { SPORT_LABELS, SportDetails, sportDetails } from '@/lib/sportProfile';
+
+type ListField = 'key_strengths' | 'key_weaknesses' | 'improvement_focus';
+
+const cleanList = (list?: string[]) => list?.map(s => s.trim()).filter(Boolean) ?? [];
 
 interface PlayerProfileData {
   id?: string;
@@ -20,6 +25,7 @@ interface PlayerProfileData {
   target_ranking?: string;
   chess_current_ranking?: string;
   chess_target_ranking?: string;
+  chess_profile?: SportDetails;
   key_strengths?: string[];
   key_weaknesses?: string[];
   improvement_focus?: string[];
@@ -50,8 +56,20 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
     key_strengths: ['', '', ''],
     key_weaknesses: ['', '', ''],
     improvement_focus: ['', '', ''],
+    chess_profile: { key_strengths: ['', '', ''], key_weaknesses: ['', '', ''], improvement_focus: ['', '', ''] },
     bio: '',
   });
+  const [editSport, setEditSport] = useState<Sport>('badminton');
+
+  const selectedSports = formData.sports ?? [];
+  const activeSport: Sport = selectedSports.includes(editSport) ? editSport : selectedSports[0] ?? 'badminton';
+  const details = sportDetails(formData, activeSport);
+  const setDetail = (field: keyof SportDetails, value: string | string[]) =>
+    setFormData(prev =>
+      activeSport === 'chess'
+        ? { ...prev, chess_profile: { ...prev.chess_profile, [field]: value } }
+        : { ...prev, [field]: value }
+    );
 
   useEffect(() => {
     loadProfile();
@@ -87,6 +105,12 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
         key_strengths: padToThree(profileData.key_strengths),
         key_weaknesses: padToThree(profileData.key_weaknesses),
         improvement_focus: padToThree(profileData.improvement_focus),
+        chess_profile: {
+          ...profileData.chess_profile,
+          key_strengths: padToThree(profileData.chess_profile?.key_strengths),
+          key_weaknesses: padToThree(profileData.chess_profile?.key_weaknesses),
+          improvement_focus: padToThree(profileData.chess_profile?.improvement_focus),
+        },
       });
     } catch (err) {
       console.error('Load profile error:', err);
@@ -104,15 +128,29 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
     }));
   };
 
-  const handleArrayChange = (field: string, index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [
-        ...(prev[field as keyof PlayerProfileData] as string[] || []).slice(0, index),
-        value,
-        ...(prev[field as keyof PlayerProfileData] as string[] || []).slice(index + 1),
-      ],
-    }));
+  const handleArrayChange = (field: ListField, index: number, value: string) => {
+    const list = [...(details[field] ?? [])];
+    list[index] = value;
+    setDetail(field, list);
+  };
+
+  const buildChessProfile = () => {
+    const c = formData.chess_profile;
+    const cleaned: SportDetails = {
+      playing_style: c?.playing_style?.trim() || undefined,
+      season_objective: c?.season_objective?.trim() || undefined,
+      key_strengths: cleanList(c?.key_strengths),
+      key_weaknesses: cleanList(c?.key_weaknesses),
+      improvement_focus: cleanList(c?.improvement_focus),
+    };
+    const empty =
+      !cleaned.playing_style &&
+      !cleaned.season_objective &&
+      !cleaned.key_strengths?.length &&
+      !cleaned.key_weaknesses?.length &&
+      !cleaned.improvement_focus?.length;
+    // Omitted when empty (works before the column exists), null to clear a saved one
+    return empty ? (profile?.chess_profile ? null : undefined) : cleaned;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +174,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
           key_strengths: formData.key_strengths?.filter(s => s.trim()),
           key_weaknesses: formData.key_weaknesses?.filter(w => w.trim()),
           improvement_focus: formData.improvement_focus?.filter(f => f.trim()),
+          chess_profile: buildChessProfile(),
         }),
       });
 
@@ -289,30 +328,45 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
               </div>
             </div>
 
+            {selectedSports.length > 1 && (
+              <div className="flex gap-2">
+                {selectedSports.map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setEditSport(s)}
+                    className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm transition ${
+                      activeSport === s ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {SPORT_LABELS[s]}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
               <label className="block text-sm font-bold text-blue-900 mb-2">Style de Jeu</label>
               <input
                 type="text"
-                name="playing_style"
-                value={formData.playing_style || ''}
-                onChange={handleInputChange}
+                value={details.playing_style || ''}
+                onChange={e => setDetail('playing_style', e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border-2 border-blue-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={playStyleExample(formData.sports)}
+                placeholder={playStyleExample([activeSport])}
               />
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
               <label className="block text-sm font-bold text-purple-900 mb-2">Objectif de Saison</label>
               <textarea
-                name="season_objective"
-                value={formData.season_objective || ''}
-                onChange={handleInputChange}
+                value={details.season_objective || ''}
+                onChange={e => setDetail('season_objective', e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border-2 border-purple-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-20 resize-none"
-                placeholder={seasonGoalExample(formData.sports)}
+                placeholder={seasonGoalExample([activeSport])}
               />
             </div>
 
-            {(formData.sports.length === 0 || formData.sports.includes('badminton')) && (
+            {activeSport === 'badminton' && (
             <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-indigo-900 mb-2">🏸 Classement actuel</label>
@@ -346,7 +400,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
             </div>
             )}
 
-            {formData.sports.includes('chess') && (
+            {activeSport === 'chess' && (
             <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl p-6 border-2 border-violet-200 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-violet-900 mb-2">♟️ Elo actuel</label>
@@ -385,14 +439,14 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
               <h4 className="text-lg font-bold text-green-900 mb-4">💪 3 Points Forts Majeurs</h4>
               <div className="space-y-3">
-                {(formData.key_strengths || []).map((strength, i) => (
+                {(details.key_strengths || []).map((strength, i) => (
                   <input
                     key={`strength-${i}`}
                     type="text"
                     value={strength}
                     onChange={(e) => handleArrayChange('key_strengths', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-green-300 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder={`ex. ${exampleForSports(formData.sports, 'strengths', i)}`}
+                    placeholder={`ex. ${exampleForSports([activeSport], 'strengths', i)}`}
                   />
                 ))}
               </div>
@@ -401,14 +455,14 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
             <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border-2 border-red-200">
               <h4 className="text-lg font-bold text-red-900 mb-4">⚠️ 3 Points Faibles Majeurs</h4>
               <div className="space-y-3">
-                {(formData.key_weaknesses || []).map((weakness, i) => (
+                {(details.key_weaknesses || []).map((weakness, i) => (
                   <input
                     key={`weakness-${i}`}
                     type="text"
                     value={weakness}
                     onChange={(e) => handleArrayChange('key_weaknesses', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-red-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder={`ex. ${exampleForSports(formData.sports, 'weaknesses', i)}`}
+                    placeholder={`ex. ${exampleForSports([activeSport], 'weaknesses', i)}`}
                   />
                 ))}
               </div>
@@ -417,14 +471,14 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
             <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 border-2 border-yellow-200">
               <h4 className="text-lg font-bold text-yellow-900 mb-4">🎯 3 Domaines Prioritaires de Progression</h4>
               <div className="space-y-3">
-                {(formData.improvement_focus || []).map((focus, i) => (
+                {(details.improvement_focus || []).map((focus, i) => (
                   <input
                     key={`focus-${i}`}
                     type="text"
                     value={focus}
                     onChange={(e) => handleArrayChange('improvement_focus', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-yellow-300 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={`ex. ${exampleForSports(formData.sports, 'improvements', i)}`}
+                    placeholder={`ex. ${exampleForSports([activeSport], 'improvements', i)}`}
                   />
                 ))}
               </div>

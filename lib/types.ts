@@ -1,4 +1,5 @@
 export type Sport = 'badminton' | 'chess';
+import type { SportDetails } from './sportProfile';
 
 export interface ProgressionEntry {
   id: string;
@@ -49,6 +50,7 @@ export interface PlayerProfile {
   target_ranking?: string; // Classement visé (ex: R6)
   chess_current_ranking?: string; // Elo actuel aux échecs
   chess_target_ranking?: string; // Elo visé aux échecs
+  chess_profile?: SportDetails; // Style, objectif, forces… côté échecs
   key_strengths?: string[]; // Points forts majeurs
   key_weaknesses?: string[]; // Points faibles majeurs
   improvement_focus?: string[]; // Domaines prioritaires pour la progression
