@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sport } from '@/lib/types';
 import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS, isKnownLevel, legacyLevelLabel } from '@/lib/rankings';
+import { authFetch } from '@/lib/authFetch';
 
 interface EditEntryModalProps {
   entry: {
@@ -85,19 +86,9 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
     setError('');
 
     try {
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        throw new Error('Session non trouvée');
-      }
-
-      const session = JSON.parse(sessionStr);
-
-      const response = await fetch(`/api/entries/${entry.id}`, {
+      const response = await authFetch(`/api/entries/${entry.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sport: selectedSport,
           date,

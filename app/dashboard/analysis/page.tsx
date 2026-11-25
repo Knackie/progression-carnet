@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/authFetch';
 
 interface Entry {
   id: string;
@@ -60,18 +61,7 @@ export default function AnalysisPage() {
       setLoading(true);
       setError('');
 
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        throw new Error('Session non trouvée');
-      }
-
-      const session = JSON.parse(sessionStr);
-
-      const response = await fetch('/api/entries', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await authFetch('/api/entries');
 
       if (!response.ok) {
         throw new Error('Erreur lors du chargement');
@@ -82,7 +72,7 @@ export default function AnalysisPage() {
 
       // Calculate analysis
       const totalEntries = entries.length;
-      const scores = entries.filter((e) => e.score !== undefined).map((e) => e.score!);
+      const scores = entries.filter((e) => e.score != null).map((e) => e.score!);
       const avgScore = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b) / scores.length) * 10) / 10 : 0;
 
       // Count frequencies

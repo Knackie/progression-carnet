@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import EditEntryModal from './EditEntryModal';
 import { legacyLevelLabel } from '@/lib/rankings';
+import { authFetch } from '@/lib/authFetch';
 
 interface Entry {
   id: string;
@@ -36,81 +37,12 @@ export default function EntriesList() {
     loadEntries();
   }, [isHydrated]);
 
-  const refreshAccessToken = async (refreshToken: string): Promise<string | null> => {
-    try {
-      const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Token refresh failed');
-      }
-
-      const data = await response.json();
-      
-      // Update localStorage with new tokens
-      const sessionStr = localStorage.getItem('sb-session');
-      if (sessionStr) {
-        const session = JSON.parse(sessionStr);
-        session.access_token = data.access_token;
-        session.refresh_token = data.refresh_token;
-        session.expires_at = data.expires_at;
-        localStorage.setItem('sb-session', JSON.stringify(session));
-      }
-
-      return data.access_token;
-    } catch (err) {
-      console.error('Token refresh error:', err);
-      return null;
-    }
-  };
-
   const loadEntries = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Get session from localStorage
-      const sessionStr = localStorage.getItem('sb-session');
-      const userStr = localStorage.getItem('sb-user');
-
-      if (!sessionStr || !userStr) {
-        setError('Session non trouvée - veuillez vous reconnecter');
-        setLoading(false);
-        return;
-      }
-
-      const session = JSON.parse(sessionStr);
-      const user = JSON.parse(userStr);
-
-      if (!session.access_token) {
-        setError('Token d\'accès invalide');
-        setLoading(false);
-        return;
-      }
-
-      let accessToken = session.access_token;
-      let response = await fetch('/api/entries', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      // If we get 401, try to refresh the token
-      if (response.status === 401 && session.refresh_token) {
-        const newToken = await refreshAccessToken(session.refresh_token);
-        if (newToken) {
-          accessToken = newToken;
-          // Retry the request with the new token
-          response = await fetch('/api/entries', {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-            },
-          });
-        }
-      }
+      const response = await authFetch('/api/entries');
 
       if (!response.ok) {
         const data = await response.json();
@@ -134,19 +66,7 @@ export default function EntriesList() {
 
     try {
       setDeletingId(id);
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        throw new Error('Session non trouvée');
-      }
-
-      const session = JSON.parse(sessionStr);
-
-      const response = await fetch(`/api/entries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await authFetch(`/api/entries/${id}`, { method: 'DELETE' });
 
       if (!response.ok) {
         const data = await response.json();

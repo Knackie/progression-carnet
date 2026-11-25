@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/lib/ThemeContext';
+import { authFetch } from '@/lib/authFetch';
 
 interface Entry {
   id: string;
@@ -33,20 +34,7 @@ export default function ProgressionGraph() {
       setLoading(true);
       setError('');
 
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        setError('Session non trouvée');
-        setLoading(false);
-        return;
-      }
-
-      const session = JSON.parse(sessionStr);
-
-      const response = await fetch('/api/entries', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await authFetch('/api/entries');
 
       if (!response.ok) {
         throw new Error('Erreur lors du chargement');

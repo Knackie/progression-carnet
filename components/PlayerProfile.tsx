@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sport } from '@/lib/types';
+import { Sport, PlayerProfile as SavedProfile } from '@/lib/types';
+import { authFetch } from '@/lib/authFetch';
 import { BADMINTON_RANKS } from '@/lib/rankings';
 
 interface PlayerProfileData {
@@ -20,8 +21,16 @@ interface PlayerProfileData {
   bio?: string;
 }
 
-export default function PlayerProfile() {
-  const [isEditing, setIsEditing] = useState(false);
+interface PlayerProfileProps {
+  startEditing?: boolean;
+  onSaved?: (profile: SavedProfile) => void;
+  onClose?: () => void;
+}
+
+const padToThree = (values?: string[]) => [...(values ?? []), '', '', ''].slice(0, Math.max(3, values?.length ?? 0));
+
+export default function PlayerProfile({ startEditing = false, onSaved, onClose }: PlayerProfileProps = {}) {
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -50,19 +59,7 @@ export default function PlayerProfile() {
       setLoading(true);
       setError('');
 
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        setLoading(false);
-        return;
-      }
-
-      const session = JSON.parse(sessionStr);
-
-      const response = await fetch('/api/player-profile', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await authFetch('/api/player-profile');
 
       if (response.status === 404) {
         setProfile(null);
@@ -82,7 +79,12 @@ export default function PlayerProfile() {
         delete profileData.sport;
       }
       setProfile(profileData);
-      setFormData(profileData);
+      setFormData({
+        ...profileData,
+        key_strengths: padToThree(profileData.key_strengths),
+        key_weaknesses: padToThree(profileData.key_weaknesses),
+        improvement_focus: padToThree(profileData.improvement_focus),
+      });
     } catch (err) {
       console.error('Load profile error:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -116,22 +118,12 @@ export default function PlayerProfile() {
     setError('');
 
     try {
-      const sessionStr = localStorage.getItem('sb-session');
-      if (!sessionStr) {
-        throw new Error('Session non trouvée');
-      }
-
-      const session = JSON.parse(sessionStr);
-
       const url = profile?.id ? `/api/player-profile/${profile.id}` : '/api/player-profile';
       const method = profile?.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           key_strengths: formData.key_strengths?.filter(s => s.trim()),
@@ -148,6 +140,7 @@ export default function PlayerProfile() {
       const data = await response.json();
       setProfile(data.data);
       setIsEditing(false);
+      onSaved?.(data.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
@@ -156,6 +149,7 @@ export default function PlayerProfile() {
   };
 
   if (loading) {
+    if (startEditing) return null;
     return (
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="text-center">
@@ -194,7 +188,8 @@ export default function PlayerProfile() {
             <button
               onClick={() => {
                 setIsEditing(false);
-                if (!profile) loadProfile();
+                if (onClose) onClose();
+                else if (!profile) loadProfile();
               }}
               className="text-white hover:bg-white/20 rounded-full p-2 transition"
             >

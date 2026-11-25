@@ -7,6 +7,7 @@ import Logo from '@/components/Logo';
 import PlayerProfile from '@/components/PlayerProfile';
 import { PlayerProfile as PlayerProfileType } from '@/lib/types';
 import { nextBadmintonRank } from '@/lib/rankings';
+import { authFetch, SessionExpiredError } from '@/lib/authFetch';
 
 interface MatchStats {
   total: number;
@@ -31,32 +32,15 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadProfileAndStats = async () => {
       try {
-        const sessionStr = localStorage.getItem('sb-session');
-        if (!sessionStr) {
-          router.push('/auth/login');
-          return;
-        }
-
-        const session = JSON.parse(sessionStr);
-
-        // Charger le profil
-        const profileResponse = await fetch('/api/player-profile', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        });
+        const [profileResponse, statsResponse] = await Promise.all([
+          authFetch('/api/player-profile'),
+          authFetch('/api/entries/stats'),
+        ]);
 
         if (profileResponse.ok) {
           const { data } = await profileResponse.json();
           setProfile(data);
         }
-
-        // Charger les statistiques des matchs
-        const statsResponse = await fetch('/api/entries/stats', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        });
 
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
@@ -65,6 +49,10 @@ export default function ProfilePage() {
 
         setError('');
       } catch (err) {
+        if (err instanceof SessionExpiredError) {
+          router.push('/auth/login');
+          return;
+        }
         console.error('Erreur:', err);
         setError('Impossible de charger le profil');
       } finally {
@@ -74,6 +62,11 @@ export default function ProfilePage() {
 
     loadProfileAndStats();
   }, [router]);
+
+  const handleProfileSaved = (saved: PlayerProfileType) => {
+    setProfile(saved);
+    setIsEditingProfile(false);
+  };
 
   if (loading) {
     return (
@@ -110,9 +103,11 @@ export default function ProfilePage() {
           </div>
 
           {isEditingProfile && (
-            <div className="mt-8">
-              <PlayerProfile />
-            </div>
+            <PlayerProfile
+              startEditing
+              onClose={() => setIsEditingProfile(false)}
+              onSaved={handleProfileSaved}
+            />
           )}
         </div>
       </div>
@@ -333,22 +328,11 @@ export default function ProfilePage() {
 
       {/* Modal d'édition */}
       {isEditingProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b-2 border-purple-200 p-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Éditer le profil</h2>
-              <button
-                onClick={() => setIsEditingProfile(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6">
-              <PlayerProfile />
-            </div>
-          </div>
-        </div>
+        <PlayerProfile
+          startEditing
+          onClose={() => setIsEditingProfile(false)}
+          onSaved={handleProfileSaved}
+        />
       )}
     </div>
   );
