@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sport, PlayerProfile as SavedProfile } from '@/lib/types';
 import { authFetch } from '@/lib/authFetch';
 import { padToThree } from '@/lib/form';
+import { exampleForSports, playStyleExample, seasonGoalExample } from '@/lib/sportExamples';
 import { BADMINTON_RANKS } from '@/lib/rankings';
 
 interface PlayerProfileData {
@@ -292,7 +293,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                 value={formData.playing_style || ''}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-blue-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ex: Agressif, Défensif, Équilibré"
+                placeholder={playStyleExample(formData.sports)}
               />
             </div>
 
@@ -303,7 +304,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                 value={formData.season_objective || ''}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 rounded-lg border-2 border-purple-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-20 resize-none"
-                placeholder="Ex: Atteindre le classement N1, Améliorer ma moyenne de 2 points..."
+                placeholder={seasonGoalExample(formData.sports)}
               />
             </div>
 
@@ -349,7 +350,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                     value={strength}
                     onChange={(e) => handleArrayChange('key_strengths', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-green-300 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder={`Point fort ${i + 1}`}
+                    placeholder={`ex. ${exampleForSports(formData.sports, 'strengths', i)}`}
                   />
                 ))}
               </div>
@@ -365,7 +366,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                     value={weakness}
                     onChange={(e) => handleArrayChange('key_weaknesses', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-red-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder={`Point faible ${i + 1}`}
+                    placeholder={`ex. ${exampleForSports(formData.sports, 'weaknesses', i)}`}
                   />
                 ))}
               </div>
@@ -381,7 +382,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                     value={focus}
                     onChange={(e) => handleArrayChange('improvement_focus', i, e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border-2 border-yellow-300 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={`Domaine de progression ${i + 1}`}
+                    placeholder={`ex. ${exampleForSports(formData.sports, 'improvements', i)}`}
                   />
                 ))}
               </div>

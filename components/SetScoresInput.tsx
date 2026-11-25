@@ -1,6 +1,26 @@
 'use client';
 
-import { SetInput, setError } from '@/lib/badmintonScore';
+import { SetInput, SetScore, matchWinner, setError } from '@/lib/badmintonScore';
+
+// Result deduced from a finished score, e.g. "🎉 Victoire · 2 sets à 1"
+export function DerivedResult({ sets }: { sets: SetScore[] }) {
+  const winner = matchWinner(sets);
+  if (!winner) return null;
+  const won = sets.filter(([me, opp]) => me > opp).length;
+  const lost = sets.length - won;
+  const isWin = winner === 'win';
+  return (
+    <div
+      className={`w-full px-4 py-3 rounded-lg border-2 font-bold text-center ${
+        isWin
+          ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-500/20 dark:text-green-200'
+          : 'bg-red-100 border-red-400 text-red-800 dark:bg-red-500/20 dark:text-red-200'
+      }`}
+    >
+      {isWin ? '🎉 Victoire' : '😔 Défaite'} · {isWin ? won : lost} set{(isWin ? won : lost) > 1 ? 's' : ''} à {isWin ? lost : won}
+    </div>
+  );
+}
 
 interface SetScoresInputProps {
   value: SetInput[];
@@ -49,7 +69,7 @@ export default function SetScoresInput({ value, onChange }: SetScoresInputProps)
           </div>
         );
       })}
-      <p className="text-xs text-orange-800 opacity-80">15 points, 2 points d’écart, 21 maximum. Le résultat se met à jour tout seul.</p>
+      <p className="text-xs text-orange-800 opacity-80">15 points, 2 points d’écart, 21 maximum. Le résultat est déduit du score.</p>
     </div>
   );
 }

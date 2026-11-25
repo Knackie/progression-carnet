@@ -5,8 +5,9 @@ import { Sport } from '@/lib/types';
 import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
 import { EMPTY_SETS, SetInput, matchWinner, parseSets } from '@/lib/badmintonScore';
-import SetScoresInput from './SetScoresInput';
+import SetScoresInput, { DerivedResult } from './SetScoresInput';
 import PointsDeltaInput, { parsePointsDelta } from './PointsDeltaInput';
+import { exampleFor } from '@/lib/sportExamples';
 
 export interface EntryPrefill {
   sport?: Sport;
@@ -47,12 +48,9 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
   const [success, setSuccess] = useState(false);
 
   const isBadmintonMatch = entryType === 'match' && selectedSport === 'badminton';
-
-  const handleSetsChange = (value: SetInput[]) => {
-    setSetInputs(value);
-    const winner = matchWinner(parseSets(value).sets);
-    if (winner) setMatchResult(winner);
-  };
+  // A finished badminton score decides the result; the menu is only for matches without a score
+  const liveSets = parseSets(setInputs);
+  const derivedResult = isBadmintonMatch && !liveSets.error ? matchWinner(liveSets.sets) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +75,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
           notes,
           score: parseInt(score),
           opponent_level: entryType === 'match' ? opponentLevel : null,
-          match_result: entryType === 'match' ? matchResult : null,
+          match_result: entryType === 'match' ? derivedResult ?? matchResult : null,
           set_scores: parsed.sets.length ? parsed.sets : null,
           points_delta: isBadmintonMatch ? parsePointsDelta(pointsDelta) : null,
           strengths: strengths.filter(s => s.trim()),
@@ -241,7 +239,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
               <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>
               {isBadmintonMatch && (
                 <div className="mb-4">
-                  <SetScoresInput value={setInputs} onChange={handleSetsChange} />
+                  <SetScoresInput value={setInputs} onChange={setSetInputs} />
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -249,14 +247,18 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
                   <>
                     <div>
                       <label className="block text-sm font-bold text-orange-900 mb-2">Résultat</label>
-                      <select
-                        value={matchResult}
-                        onChange={(e) => setMatchResult(e.target.value as 'win' | 'loss')}
-                        className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        <option value="win">🎉 Victoire</option>
-                        <option value="loss">😔 Défaite</option>
-                      </select>
+                      {derivedResult ? (
+                        <DerivedResult sets={liveSets.sets} />
+                      ) : (
+                        <select
+                          value={matchResult}
+                          onChange={(e) => setMatchResult(e.target.value as 'win' | 'loss')}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="win">🎉 Victoire</option>
+                          <option value="loss">😔 Défaite</option>
+                        </select>
+                      )}
                     </div>
                     <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} />
                   </>
@@ -305,7 +307,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
                     newStrengths[i] = e.target.value;
                     setStrengths(newStrengths);
                   }}
-                  placeholder={`Ex: Bon service, Réflexes rapides...`}
+                  placeholder={`ex. ${exampleFor(selectedSport, 'strengths', i)}`}
                   className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-semibold"
                 />
               ))}
@@ -326,7 +328,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
                     newWeaknesses[i] = e.target.value;
                     setWeaknesses(newWeaknesses);
                   }}
-                  placeholder={`Ex: Concentration, Jeu en défense...`}
+                  placeholder={`ex. ${exampleFor(selectedSport, 'weaknesses', i)}`}
                   className="w-full px-4 py-3 rounded-lg border-2 border-red-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent font-semibold"
                 />
               ))}
@@ -347,7 +349,7 @@ export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFo
                     newAxes[i] = e.target.value;
                     setAxes(newAxes);
                   }}
-                  placeholder={`Ex: Améliorer le smash, Travailler l'endurance...`}
+                  placeholder={`ex. ${exampleFor(selectedSport, 'improvements', i)}`}
                   className="w-full px-4 py-3 rounded-lg border-2 border-amber-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-semibold"
                 />
               ))}

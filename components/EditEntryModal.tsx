@@ -6,9 +6,10 @@ import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS, isKnownLevel, legacyLevelLabel 
 import { authFetch } from '@/lib/authFetch';
 import { padToThree } from '@/lib/form';
 import { SetInput, SetScore, matchWinner, parseSets, toSetInputs } from '@/lib/badmintonScore';
-import SetScoresInput from './SetScoresInput';
+import SetScoresInput, { DerivedResult } from './SetScoresInput';
 import { EntryStatus, MatchGoal } from '@/lib/matchPrep';
 import PointsDeltaInput, { parsePointsDelta } from './PointsDeltaInput';
+import { exampleFor } from '@/lib/sportExamples';
 
 interface EditEntryModalProps {
   entry: {
@@ -40,25 +41,7 @@ const SPORTS: { value: Sport; label: string; emoji: string }[] = [
   { value: 'chess', label: 'Échecs', emoji: '♟️' },
 ];
 
-// Exemples dynamiques selon le sport
-const EXAMPLES = {
-  badminton: {
-    strengths: ['Smash puissant', 'Déplacements rapides', 'Jeu au filet excellent'],
-    weaknesses: ['Revers faible', 'Service inconsistant', 'Gestion mentale'],
-    improvements: ['Travailler le revers', 'Améliorer la régularité du service', 'Mieux gérer la pression'],
-  },
-  chess: {
-    strengths: ['Tactique solide', 'Endgame maîtrisé', 'Prise de risques calculée'],
-    weaknesses: ['Ouverture approximative', 'Gestion du temps faible', 'Défense passive'],
-    improvements: ['Approfondir les ouvertures', 'Augmenter le temps de jeu', 'Améliorer la défense active'],
-  },
-};
-
-// Fonction pour obtenir l'exemple selon le sport et le type
-const getExample = (sport: 'badminton' | 'chess', type: 'strengths' | 'weaknesses' | 'improvements', index: number) => {
-  const examples = EXAMPLES[sport][type];
-  return examples[index] || `${type === 'strengths' ? 'Point fort' : type === 'weaknesses' ? 'Point faible' : 'Axe'} ${index + 1}`;
-};
+const getExample = exampleFor;
 
 export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditEntryModalProps) {
   const [selectedSport, setSelectedSport] = useState<Sport>(entry.sport);
@@ -103,12 +86,9 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   }, [isOpen, entry]);
 
   const isBadmintonMatch = entryType === 'match' && selectedSport === 'badminton';
-
-  const handleSetsChange = (value: SetInput[]) => {
-    setSetInputs(value);
-    const winner = matchWinner(parseSets(value).sets);
-    if (winner) setMatchResult(winner);
-  };
+  // A finished badminton score decides the result; the menu is only for matches without a score
+  const liveSets = parseSets(setInputs);
+  const derivedResult = isBadmintonMatch && !liveSets.error ? matchWinner(liveSets.sets) : null;
 
   // Send prep fields only when they hold or held something, so editing still
   // works on a database without these columns.
@@ -150,7 +130,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           notes,
           score,
           opponent_level: entryType === 'match' ? opponentLevel : null,
-          match_result: entryType === 'match' ? matchResult : null,
+          match_result: entryType === 'match' ? derivedResult ?? matchResult : null,
           ...setScoresField,
           ...prepPayload(),
           strengths: strengths.filter(s => s.trim()),
@@ -293,11 +273,14 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
               <h4 className="text-lg font-bold text-orange-900 mb-4">🏆 Résultat du Match</h4>
               {isBadmintonMatch && (
                 <div className="mb-4">
-                  <SetScoresInput value={setInputs} onChange={handleSetsChange} />
+                  <SetScoresInput value={setInputs} onChange={setSetInputs} />
                 </div>
               )}
               <div>
                 <label className="block text-sm font-bold text-orange-900 mb-2">Résultat</label>
+                {derivedResult ? (
+                  <DerivedResult sets={liveSets.sets} />
+                ) : (
                 <select
                   value={matchResult}
                   onChange={(e) => setMatchResult(e.target.value as 'win' | 'loss' | 'draw')}
@@ -316,6 +299,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                     </>
                   )}
                 </select>
+                )}
               </div>
               {isBadmintonMatch && (
                 <div className="mt-4">
