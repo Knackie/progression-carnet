@@ -27,6 +27,7 @@ Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · Recharts · Supabase (
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
    ```
 3. Dans Supabase > SQL Editor, exécuter [supabase/setup.sql](./supabase/setup.sql). Le script peut être relancé sans risque après chaque mise à jour.
+   Sur une base existante, relancer ce script pour rendre facultative l'ancienne colonne `player_profiles.sport` et permettre la création des profils utilisant `sports`.
 4. `npm run dev`, puis ouvrir http://localhost:3000
 
 ## Déploiement
