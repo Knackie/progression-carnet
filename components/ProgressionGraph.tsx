@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/lib/ThemeContext';
 import { authFetch } from '@/lib/authFetch';
+import type { Sport } from '@/lib/types';
 
 interface Entry {
+  sport: Sport;
   date: string;
   entry_type: 'match' | 'training';
   match_result?: 'win' | 'loss' | 'draw' | null;
@@ -24,11 +26,47 @@ interface DayPoint {
 
 const EMPTY_CARD = 'bg-white rounded-xl shadow-lg p-8';
 
+const SPORTS: { value: Sport; label: string }[] = [
+  { value: 'badminton', label: '🏸 Badminton' },
+  { value: 'chess', label: '♟️ Échecs' },
+];
+
+function buildDays(matches: Entry[]): DayPoint[] {
+  const byDay = new Map<string, { wins: number; losses: number; draws: number; delta: number; hasDelta: boolean }>();
+  matches.forEach(e => {
+    const day = byDay.get(e.date) ?? { wins: 0, losses: 0, draws: 0, delta: 0, hasDelta: false };
+    if (e.match_result === 'win') day.wins += 1;
+    else if (e.match_result === 'loss') day.losses += 1;
+    else day.draws += 1;
+    if (e.points_delta != null) {
+      day.delta += e.points_delta;
+      day.hasDelta = true;
+    }
+    byDay.set(e.date, day);
+  });
+
+  // Points are cumulative so the line shows the overall trend
+  let total = 0;
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, d]) => {
+      total += d.delta;
+      return {
+        date,
+        label: new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
+        wins: d.wins,
+        losses: d.losses,
+        draws: d.draws,
+        points: d.hasDelta ? total : null,
+      };
+    })
+    .slice(-30);
+}
+
 export default function ProgressionGraph() {
   const { isDark } = useTheme();
-  const [data, setData] = useState<DayPoint[]>([]);
-  const [hasPoints, setHasPoints] = useState(false);
-  const [hasDraws, setHasDraws] = useState(false);
+  const [matches, setMatches] = useState<Entry[]>([]);
+  const [sport, setSport] = useState<Sport>('badminton');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
@@ -51,46 +89,14 @@ export default function ProgressionGraph() {
       if (!response.ok) throw new Error('Erreur lors du chargement');
 
       const result = await response.json();
-      const matches: Entry[] = (result.data || []).filter(
+      const loaded: Entry[] = (result.data || []).filter(
         (e: Entry) => e.status !== 'planned' && e.entry_type === 'match' && e.match_result
       );
+      setMatches(loaded);
 
-      const byDay = new Map<string, { wins: number; losses: number; draws: number; delta: number; hasDelta: boolean }>();
-      matches.forEach(e => {
-        const day = byDay.get(e.date) ?? { wins: 0, losses: 0, draws: 0, delta: 0, hasDelta: false };
-        if (e.match_result === 'win') day.wins += 1;
-        else if (e.match_result === 'loss') day.losses += 1;
-        else day.draws += 1;
-        if (e.points_delta != null) {
-          day.delta += e.points_delta;
-          day.hasDelta = true;
-        }
-        byDay.set(e.date, day);
-      });
-
-      // Points are cumulative so the line shows the overall trend
-      let total = 0;
-      const days: DayPoint[] = [...byDay.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([date, d]) => {
-          total += d.delta;
-          return {
-            date,
-            label: new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
-            wins: d.wins,
-            losses: d.losses,
-            draws: d.draws,
-            points: null as number | null,
-            hasDelta: d.hasDelta,
-            cumulative: total,
-          };
-        })
-        .map(({ hasDelta, cumulative, ...day }) => ({ ...day, points: hasDelta ? cumulative : null }));
-
-      const recent = days.slice(-30);
-      setHasPoints(recent.some(d => d.points !== null));
-      setHasDraws(recent.some(d => d.draws > 0));
-      setData(recent);
+      // Open on the sport of the latest match
+      const latest = [...loaded].sort((a, b) => b.date.localeCompare(a.date))[0];
+      if (latest) setSport(latest.sport);
     } catch (err) {
       console.error('Load data error:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -98,6 +104,10 @@ export default function ProgressionGraph() {
       setLoading(false);
     }
   };
+
+  const data = buildDays(matches.filter(e => e.sport === sport));
+  const hasPoints = sport === 'badminton' && data.some(d => d.points !== null);
+  const hasDraws = data.some(d => d.draws > 0);
 
   if (!isHydrated) return null;
 
@@ -122,7 +132,7 @@ export default function ProgressionGraph() {
     );
   }
 
-  if (data.length === 0) {
+  if (matches.length === 0) {
     return (
       <div className={EMPTY_CARD}>
         <div className="text-center">
@@ -137,7 +147,23 @@ export default function ProgressionGraph() {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
-      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">📈 Votre Progression</h3>
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">📈 Votre Progression</h3>
+      <div className="flex gap-2 mb-4 sm:mb-6">
+        {SPORTS.map(s => (
+          <button
+            key={s.value}
+            onClick={() => setSport(s.value)}
+            className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${
+              sport === s.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+      {data.length === 0 ? (
+        <p className="text-center text-gray-500 text-sm py-12">Aucun match enregistré dans ce sport.</p>
+      ) : (
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={data} margin={{ top: 5, right: hasPoints ? 0 : 10, left: -20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
@@ -171,6 +197,7 @@ export default function ProgressionGraph() {
           )}
         </ComposedChart>
       </ResponsiveContainer>
+      )}
     </div>
   );
 }
