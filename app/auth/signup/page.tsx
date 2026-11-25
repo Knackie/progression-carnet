@@ -1,4 +1,5 @@
 import SignUpForm from '@/components/SignUpForm';
+import Logo from '@/components/Logo';
 
 export default function SignUpPage() {
   return (
@@ -15,7 +16,7 @@ export default function SignUpPage() {
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="text-5xl mb-4">🏸</div>
+            <div className="flex justify-center mb-4"><Logo size={64} showText={false} /></div>
             <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Carnet de Progression
             </h1>

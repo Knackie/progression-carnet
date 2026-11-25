@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -41,27 +42,30 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl">📊</span>
-            <span className="text-2xl font-black text-white">Carnet de Progression</span>
-          </div>
-          <div className="flex gap-3 items-center">
+        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex justify-between items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 min-w-0">
+            <Logo size={36} showText={false} />
+            <span className="text-lg sm:text-2xl font-black text-white truncate">
+              <span className="sm:hidden">Carnet</span>
+              <span className="hidden sm:inline">Carnet de Progression</span>
+            </span>
+          </Link>
+          <div className="flex gap-1 sm:gap-3 items-center shrink-0">
             <Link
               href="/info"
-              className="px-6 py-2 text-white font-semibold hover:bg-white/20 rounded-lg transition"
+              className="hidden sm:block px-6 py-2 text-white font-semibold hover:bg-white/20 rounded-lg transition"
             >
               À Propos
             </Link>
             <Link
               href="/auth/login"
-              className="px-6 py-2 text-white font-semibold hover:bg-white/20 rounded-lg transition"
+              className="px-3 sm:px-6 py-2 text-sm sm:text-base text-white font-semibold hover:bg-white/20 rounded-lg transition"
             >
               Se connecter
             </Link>
             <Link
               href="/auth/signup"
-              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition"
+              className="px-3 sm:px-6 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition"
             >
               S'inscrire
             </Link>
@@ -197,7 +201,7 @@ export default function Home() {
         {/* CTA */}
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-12 text-center border border-white/30">
           <h2 className="text-4xl font-black text-white mb-6">Prêt à progresser ?</h2>
-          <p className="text-xl text-blue-50 mb-8">Rejoignez des centaines de joueurs qui améliorent leur jeu chaque jour</p>
+          <p className="text-xl text-blue-50 mb-8">Notez chaque match, comprenez vos erreurs et voyez votre classement monter</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/auth/signup"

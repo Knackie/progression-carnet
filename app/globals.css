@@ -51,13 +51,37 @@ body {
 .dark .bg-orange-50:not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-yellow-900) 40%, transparent); }
 
 .dark .from-gray-50:not([class*="dark:from-"]),
+.dark .from-white:not([class*="dark:from-"]),
 .dark .from-blue-50:not([class*="dark:from-"]),
-.dark .from-purple-50:not([class*="dark:from-"]) { --tw-gradient-from: var(--color-gray-950); }
+.dark .from-purple-50:not([class*="dark:from-"]) { --tw-gradient-from: var(--color-gray-900); }
 .dark .to-gray-50:not([class*="dark:to-"]),
 .dark .to-gray-100:not([class*="dark:to-"]),
-.dark .to-blue-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-blue-950); }
+.dark .to-blue-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-gray-900); }
 .dark .to-purple-50:not([class*="dark:to-"]),
-.dark .to-purple-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-purple-950); }
+.dark .to-purple-100:not([class*="dark:to-"]) { --tw-gradient-to: var(--color-gray-900); }
+
+/* Pastel colored sections (forms, profile): tinted dark instead of pastel */
+.dark :is(.from-green-50, .from-red-50, .from-yellow-50, .from-orange-50, .from-indigo-50, .from-amber-50, .from-slate-50, .from-pink-50):not([class*="dark:from-"]) { --tw-gradient-from: var(--color-gray-900); }
+.dark :is(.to-green-100, .to-red-100, .to-yellow-100, .to-orange-100, .to-indigo-100, .to-amber-100, .to-slate-100, .to-pink-50):not([class*="dark:to-"]) { --tw-gradient-to: var(--color-gray-800); }
+.dark :is(.bg-yellow-50, .bg-amber-50, .bg-pink-50, .bg-slate-50):not([class*="dark:bg-"]) { background-color: color-mix(in oklab, var(--color-yellow-900) 30%, transparent); }
+
+/* Dark colored text is unreadable on dark backgrounds: lighten it */
+.dark :is(.text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900):not([class*="dark:text-"]) { color: var(--color-blue-300); }
+.dark :is(.text-indigo-600, .text-indigo-700, .text-indigo-800, .text-indigo-900):not([class*="dark:text-"]) { color: var(--color-indigo-300); }
+.dark :is(.text-purple-600, .text-purple-700, .text-purple-800, .text-purple-900):not([class*="dark:text-"]) { color: var(--color-purple-300); }
+.dark :is(.text-green-600, .text-green-700, .text-green-800, .text-green-900):not([class*="dark:text-"]) { color: var(--color-green-300); }
+.dark :is(.text-red-600, .text-red-700, .text-red-800, .text-red-900):not([class*="dark:text-"]) { color: var(--color-red-300); }
+.dark :is(.text-yellow-600, .text-yellow-700, .text-yellow-800, .text-yellow-900, .text-amber-800, .text-amber-900):not([class*="dark:text-"]) { color: var(--color-yellow-300); }
+.dark :is(.text-orange-600, .text-orange-700, .text-orange-800, .text-orange-900):not([class*="dark:text-"]) { color: var(--color-orange-300); }
+.dark .text-pink-600:not([class*="dark:text-"]) { color: var(--color-pink-300); }
+.dark .text-slate-900:not([class*="dark:text-"]) { color: var(--color-gray-100); }
+
+/* Pastel borders glow on dark: tone them down */
+.dark :is(.border-blue-200, .border-blue-300, .border-indigo-200, .border-indigo-300, .border-purple-200, .border-purple-300,
+  .border-green-200, .border-green-300, .border-red-200, .border-red-300, .border-yellow-200, .border-yellow-300,
+  .border-orange-200, .border-orange-300, .border-amber-200, .border-pink-200, .border-slate-200):not([class*="dark:border-"]) {
+  border-color: color-mix(in oklab, currentColor 25%, var(--color-gray-700));
+}
 
 .dark .text-gray-900:not([class*="dark:text-"]),
 .dark .text-gray-800:not([class*="dark:text-"]) { color: var(--color-gray-100); }

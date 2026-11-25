@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import { useTheme } from '@/lib/ThemeContext';
 
 export default function InfoPage() {
@@ -10,18 +11,19 @@ export default function InfoPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950 transition-colors">
       {/* Header avec Menu */}
       <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-900/50 border-b dark:border-gray-800">
-        <nav className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition">
-            📊 Carnet de Progression
+        <nav className="max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-4 flex items-center justify-between gap-2">
+          <Link href="/" aria-label="Accueil" className="hover:opacity-80 transition shrink-0">
+            <span className="md:hidden"><Logo size={36} showText={false} /></span>
+            <span className="hidden md:block text-2xl"><Logo size={36} /></span>
           </Link>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6 text-sm md:text-base">
             <Link href="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-semibold transition">
               Dashboard
             </Link>
             <Link href="/profile" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-semibold transition">
               Profil
             </Link>
-            <Link href="/info" className="text-purple-600 dark:text-purple-400 font-bold border-b-2 border-purple-600 dark:border-purple-400">
+            <Link href="/info" className="hidden sm:inline text-purple-600 dark:text-purple-400 font-bold border-b-2 border-purple-600 dark:border-purple-400">
               À Propos
             </Link>
             <button
@@ -38,7 +40,7 @@ export default function InfoPage() {
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-16 md:py-24">
         <div className="text-center mb-16">
-          <div className="text-7xl mb-6">📊</div>
+          <div className="flex justify-center mb-6"><Logo size={96} showText={false} /></div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Carnet de Progression
           </h1>

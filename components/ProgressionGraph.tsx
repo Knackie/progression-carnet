@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface Entry {
   id: string;
@@ -12,6 +13,7 @@ interface Entry {
 }
 
 export default function ProgressionGraph() {
+  const { isDark } = useTheme();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -131,24 +133,25 @@ export default function ProgressionGraph() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8">
-      <h3 className="text-2xl font-bold text-gray-800 mb-6">📈 Votre Progression</h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">📈 Votre Progression</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
           <XAxis 
             dataKey="date" 
-            stroke="#999"
-            style={{ fontSize: '14px' }}
+            stroke={isDark ? '#9ca3af' : '#6b7280'}
+            style={{ fontSize: '12px' }}
           />
           <YAxis 
             domain={[0, 10]}
-            stroke="#999"
-            style={{ fontSize: '14px' }}
+            stroke={isDark ? '#9ca3af' : '#6b7280'}
+            style={{ fontSize: '12px' }}
           />
           <Tooltip 
             contentStyle={{
-              backgroundColor: '#fff',
+              backgroundColor: isDark ? '#1f2937' : '#fff',
+              color: isDark ? '#f3f4f6' : '#111827',
               border: '2px solid #6366f1',
               borderRadius: '8px',
               padding: '12px',

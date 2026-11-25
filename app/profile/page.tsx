@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Logo from '@/components/Logo';
 import PlayerProfile from '@/components/PlayerProfile';
 import { PlayerProfile as PlayerProfileType } from '@/lib/types';
 import { nextBadmintonRank } from '@/lib/rankings';
@@ -88,12 +90,12 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="mb-6 px-4 py-2 text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-2"
+          <Link
+            href="/dashboard"
+            className="mb-6 px-4 py-2 text-purple-600 hover:text-purple-800 font-semibold inline-flex items-center gap-2"
           >
-            ← Retour
-          </button>
+            ← Tableau de bord
+          </Link>
           
           <div className="bg-white rounded-2xl p-8 text-center border-2 border-purple-200">
             <div className="text-6xl mb-4">👤</div>
@@ -126,18 +128,17 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-2"
-          >
-            ← Retour
-          </button>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-purple-600 hover:text-purple-800 min-w-0">
+            <span>←</span>
+            <Logo size={36} showText={false} />
+            <span className="truncate">Tableau de bord</span>
+          </Link>
           <button
             onClick={() => setIsEditingProfile(true)}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"
+            className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shrink-0"
           >
-            ✏️ Éditer le profil
+            ✏️ <span className="hidden sm:inline">Éditer le profil</span>
           </button>
         </div>
 

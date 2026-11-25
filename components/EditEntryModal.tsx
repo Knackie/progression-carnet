@@ -10,9 +10,9 @@ interface EditEntryModalProps {
     sport: 'badminton' | 'chess';
     entry_type: 'match' | 'training';
     date: string;
-    score?: number;
-    opponent_level?: string;
-    match_result?: 'win' | 'loss' | 'draw';
+    score?: number | null;
+    opponent_level?: string | null;
+    match_result?: 'win' | 'loss' | 'draw' | null;
     notes: string;
     strengths: string[];
     weaknesses: string[];

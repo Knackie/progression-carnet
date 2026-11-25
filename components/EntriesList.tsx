@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import EditEntryModal from './EditEntryModal';
+import { legacyLevelLabel } from '@/lib/rankings';
 
 interface Entry {
   id: string;
   sport: 'badminton' | 'chess';
   entry_type: 'match' | 'training';
   date: string;
-  score?: number;
-  match_result?: 'win' | 'loss' | 'draw';
+  score?: number | null;
+  opponent_level?: string | null;
+  match_result?: 'win' | 'loss' | 'draw' | null;
   notes: string;
   strengths: string[];
   weaknesses: string[];
@@ -23,6 +25,7 @@ export default function EntriesList() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -203,52 +206,60 @@ export default function EntriesList() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-bold text-gray-800">📋 Vos Entrées Récentes ({entries.length})</h3>
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-800">📋 Vos Entrées ({entries.length})</h3>
       <div className="grid gap-4">
-        {entries.slice(0, 10).map((entry) => (
+        {(showAll ? entries : entries.slice(0, 10)).map((entry) => (
           <div
             key={entry.id}
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition border-l-4 border-blue-500"
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition border-l-4 border-blue-500"
           >
             {/* Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">
+            <div className="flex justify-between items-start gap-3 mb-4">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="text-xl sm:text-2xl">
                     {entry.sport === 'badminton' ? '🏸' : '♟️'}
                   </span>
-                  <span className="text-xl font-bold text-gray-800">
+                  <span className="text-lg sm:text-xl font-bold text-gray-800">
                     {entry.sport === 'badminton' ? 'Badminton' : 'Échecs'}
                   </span>
-                  <span className="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+                  <span className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
                     {entry.entry_type === 'match' ? '🎯 Match' : '🏋️ Entraînement'}
                   </span>
+                  {entry.entry_type === 'match' && entry.opponent_level && (
+                    <span className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                      vs {legacyLevelLabel(entry.opponent_level)}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500">
-                  📅 {new Date(entry.date).toLocaleDateString('fr-FR', {
+                  📅 {new Date(`${entry.date}T00:00:00`).toLocaleDateString('fr-FR', {
                     weekday: 'long',
-                    year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                   })}
                 </p>
               </div>
-              <div className="flex flex-col gap-2 items-end">
-                {entry.score !== undefined && (
-                  <div className="flex flex-col gap-2">
-                    <div className="text-center bg-blue-50 rounded-lg p-3">
-                      <div className="text-3xl font-black text-blue-600">{entry.score}</div>
-                      <div className="text-xs text-gray-600">/10</div>
-                    </div>
-                    {entry.entry_type === 'match' && entry.match_result && (
-                      <div className="text-center bg-orange-50 rounded-lg p-2 border border-orange-200">
-                        <div className="text-sm font-bold">
-                          {entry.match_result === 'win' && '🎉 Victoire'}
-                          {entry.match_result === 'loss' && '😔 Défaite'}
-                          {entry.match_result === 'draw' && '🤝 Nulle'}
-                        </div>
-                      </div>
-                    )}
+              <div className="flex flex-col gap-2 items-end shrink-0">
+                {entry.score != null && (
+                  <div className="text-center bg-blue-50 dark:bg-blue-500/15 rounded-lg px-3 py-2">
+                    <span className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-300">{entry.score}</span>
+                    <span className="text-xs text-gray-600">/10</span>
+                  </div>
+                )}
+                {entry.entry_type === 'match' && entry.match_result && (
+                  <div
+                    className={`text-sm font-bold rounded-lg px-2 py-1 ${
+                      entry.match_result === 'win'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
+                        : entry.match_result === 'loss'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200'
+                          : 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200'
+                    }`}
+                  >
+                    {entry.match_result === 'win' && '🎉 Victoire'}
+                    {entry.match_result === 'loss' && '😔 Défaite'}
+                    {entry.match_result === 'draw' && '🤝 Nulle'}
                   </div>
                 )}
                 {/* Action Buttons */}
@@ -321,6 +332,15 @@ export default function EntriesList() {
           </div>
         ))}
       </div>
+
+      {entries.length > 10 && (
+        <button
+          onClick={() => setShowAll(prev => !prev)}
+          className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+        >
+          {showAll ? 'Afficher moins' : `Voir les ${entries.length - 10} entrées plus anciennes`}
+        </button>
+      )}
 
       {/* Edit Modal */}
       {editingId && (
