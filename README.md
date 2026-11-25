@@ -12,6 +12,7 @@ Journal de progression pour le badminton et les échecs : après chaque match ou
 - Graphique de progression et page d'analyse (points récurrents, taux de victoire)
 - Profil joueur avec classement actuel et prochain palier
 - Mode sombre
+- Installable sur téléphone (Android : menu Chrome > « Installer l'application » ; iPhone : Safari > Partager > « Sur l'écran d'accueil »)
 
 ## Stack
 
