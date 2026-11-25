@@ -1,42 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
+    if (localStorage.getItem('sb-session')) {
+      router.replace('/dashboard');
+      return;
+    }
+    setChecked(true);
+  }, [router]);
 
-    checkAuth();
-  }, []);
-
-  if (loading) return null;
-
-  if (user) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-5xl font-bold mb-6 text-gray-900">Carnet de Progression 🏸</h1>
-          <p className="text-xl text-gray-700 mb-8">Analysez votre progression et devenez meilleur</p>
-          <Link
-            href="/dashboard"
-            className="inline-block rounded-lg bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition"
-          >
-            Aller au dashboard
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  if (!checked) return null;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">

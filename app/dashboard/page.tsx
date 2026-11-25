@@ -6,7 +6,6 @@ import Link from 'next/link';
 import QuickEntryForm from '@/components/QuickEntryForm';
 import EntriesList from '@/components/EntriesList';
 import ProgressionGraph from '@/components/ProgressionGraph';
-import { getOrRefreshSession } from '@/app/auth/actions';
 import { useTheme } from '@/lib/ThemeContext';
 import Logo from '@/components/Logo';
 
@@ -28,49 +27,24 @@ export default function DashboardPage() {
     checkAuth();
   }, [router]);
 
-  const checkAuth = async () => {
+  const checkAuth = () => {
     try {
-      setIsLoading(true);
-
-      // First, try to get session from server (checks cookies)
-      const serverResult = await getOrRefreshSession();
-
-      if (serverResult.session && serverResult.user) {
-        // Session is valid from cookies, update localStorage
-        localStorage.setItem('sb-session', JSON.stringify(serverResult.session));
-        localStorage.setItem('sb-user', JSON.stringify(serverResult.user));
-        setUserEmail(serverResult.user.email || '');
-        setHasSession(true);
-        setSessionExpired(false);
-        setIsLoading(false);
-        return;
-      }
-
-      // If no server session, try localStorage
       const sessionStr = localStorage.getItem('sb-session');
       const userStr = localStorage.getItem('sb-user');
 
       if (!sessionStr || !userStr) {
-        setIsLoading(false);
-        setTimeout(() => {
-          router.push('/auth/login');
-        }, 100);
+        router.replace('/auth/login');
         return;
       }
 
-      try {
-        const userData = JSON.parse(userStr);
-        setUserEmail(userData.email);
-        setHasSession(true);
-        setSessionExpired(false);
-      } catch (e) {
-        console.error('Failed to parse user:', e);
-        setSessionExpired(true);
-      }
-
-      setIsLoading(false);
+      const userData = JSON.parse(userStr);
+      setUserEmail(userData.email);
+      setHasSession(true);
+      setSessionExpired(false);
     } catch (err) {
       console.error('Auth check error:', err);
+      setSessionExpired(true);
+    } finally {
       setIsLoading(false);
     }
   };

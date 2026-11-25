@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { translateAuthError } from '@/lib/authErrors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,47 +8,24 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Email et mot de passe requis' },
         { status: 400 }
       );
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase config:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
-      return NextResponse.json(
-        { error: 'Supabase configuration missing' },
-        { status: 500 }
-      );
-    }
-
-    console.log('Creating Supabase client with:', { supabaseUrl, keyLength: supabaseKey.length });
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Attempting signup for:', email);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${process.env.VERCEL_URL || 'http://localhost:3000'}/auth/callback`,
-      },
-    });
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
-      console.error('Supabase SignUp Error:', {
-        message: error.message,
-        status: error.status,
-        code: error.code,
-      });
       return NextResponse.json(
-        { error: error.message, details: error.code },
+        { error: translateAuthError(error.message), details: error.code },
         { status: error.status || 400 }
       );
     }
 
-    console.log('SignUp successful for:', email);
     return NextResponse.json({ data }, { status: 200 });
   } catch (err) {
     console.error('SignUp API error:', err);
