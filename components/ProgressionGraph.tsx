@@ -1,21 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/lib/ThemeContext';
 import { authFetch } from '@/lib/authFetch';
 
 interface Entry {
-  id: string;
   date: string;
-  score?: number;
-  match_result?: 'win' | 'loss' | 'draw';
-  sport: 'badminton' | 'chess';
+  entry_type: 'match' | 'training';
+  match_result?: 'win' | 'loss' | 'draw' | null;
+  points_delta?: number | null;
+  status?: string | null;
 }
+
+interface DayPoint {
+  date: string;
+  label: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  points: number | null;
+}
+
+const EMPTY_CARD = 'bg-white rounded-xl shadow-lg p-8';
 
 export default function ProgressionGraph() {
   const { isDark } = useTheme();
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<DayPoint[]>([]);
+  const [hasPoints, setHasPoints] = useState(false);
+  const [hasDraws, setHasDraws] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
@@ -35,47 +48,49 @@ export default function ProgressionGraph() {
       setError('');
 
       const response = await authFetch('/api/entries');
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement');
-      }
+      if (!response.ok) throw new Error('Erreur lors du chargement');
 
       const result = await response.json();
-      const entries: Entry[] = (result.data || []).filter((e: { status?: string }) => e.status !== 'planned');
+      const matches: Entry[] = (result.data || []).filter(
+        (e: Entry) => e.status !== 'planned' && e.entry_type === 'match' && e.match_result
+      );
 
-      // Group by date and calculate average score
-      const grouped: { [key: string]: { badminton: number[]; chess: number[] } } = {};
-
-      entries.forEach((entry) => {
-        const dateKey = new Date(entry.date).toLocaleDateString('fr-FR', {
-          month: 'short',
-          day: 'numeric',
-        });
-
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = { badminton: [], chess: [] };
+      const byDay = new Map<string, { wins: number; losses: number; draws: number; delta: number; hasDelta: boolean }>();
+      matches.forEach(e => {
+        const day = byDay.get(e.date) ?? { wins: 0, losses: 0, draws: 0, delta: 0, hasDelta: false };
+        if (e.match_result === 'win') day.wins += 1;
+        else if (e.match_result === 'loss') day.losses += 1;
+        else day.draws += 1;
+        if (e.points_delta != null) {
+          day.delta += e.points_delta;
+          day.hasDelta = true;
         }
-
-        if (entry.score !== undefined) {
-          if (entry.sport === 'badminton') {
-            grouped[dateKey].badminton.push(entry.score);
-          } else {
-            grouped[dateKey].chess.push(entry.score);
-          }
-        }
+        byDay.set(e.date, day);
       });
 
-      // Convert to chart data
-      const chartData = Object.entries(grouped)
-        .map(([date, scores]) => ({
-          date,
-          badminton: scores.badminton.length > 0 ? Math.round(scores.badminton.reduce((a, b) => a + b) / scores.badminton.length) : null,
-          chess: scores.chess.length > 0 ? Math.round(scores.chess.reduce((a, b) => a + b) / scores.chess.length) : null,
-        }))
-        .reverse() // Chronological order
-        .slice(-30); // Last 30 days
+      // Points are cumulative so the line shows the overall trend
+      let total = 0;
+      const days: DayPoint[] = [...byDay.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, d]) => {
+          total += d.delta;
+          return {
+            date,
+            label: new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
+            wins: d.wins,
+            losses: d.losses,
+            draws: d.draws,
+            points: null as number | null,
+            hasDelta: d.hasDelta,
+            cumulative: total,
+          };
+        })
+        .map(({ hasDelta, cumulative, ...day }) => ({ ...day, points: hasDelta ? cumulative : null }));
 
-      setData(chartData);
+      const recent = days.slice(-30);
+      setHasPoints(recent.some(d => d.points !== null));
+      setHasDraws(recent.some(d => d.draws > 0));
+      setData(recent);
     } catch (err) {
       console.error('Load data error:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -84,13 +99,11 @@ export default function ProgressionGraph() {
     }
   };
 
-  if (!isHydrated) {
-    return null;
-  }
+  if (!isHydrated) return null;
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className={EMPTY_CARD}>
         <div className="text-center">
           <div className="inline-block animate-spin text-3xl mb-3">⌛</div>
           <p className="text-gray-600">Chargement du graphique...</p>
@@ -101,7 +114,7 @@ export default function ProgressionGraph() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className={EMPTY_CARD}>
         <div className="text-center">
           <p className="text-red-600 font-semibold">❌ {error}</p>
         </div>
@@ -111,32 +124,27 @@ export default function ProgressionGraph() {
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className={EMPTY_CARD}>
         <div className="text-center">
-          <p className="text-gray-600">📊 Pas assez de données pour afficher le graphique</p>
-          <p className="text-gray-500 text-sm mt-2">Créez des entrées avec des scores pour voir votre progression!</p>
+          <p className="text-gray-600">📊 Pas encore de match à afficher</p>
+          <p className="text-gray-500 text-sm mt-2">Enregistrez un match avec son résultat pour voir votre progression !</p>
         </div>
       </div>
     );
   }
 
+  const axisColor = isDark ? '#9ca3af' : '#6b7280';
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
       <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">📈 Votre Progression</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+        <ComposedChart data={data} margin={{ top: 5, right: hasPoints ? 0 : 10, left: -20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-          <XAxis 
-            dataKey="date" 
-            stroke={isDark ? '#9ca3af' : '#6b7280'}
-            style={{ fontSize: '12px' }}
-          />
-          <YAxis 
-            domain={[0, 10]}
-            stroke={isDark ? '#9ca3af' : '#6b7280'}
-            style={{ fontSize: '12px' }}
-          />
-          <Tooltip 
+          <XAxis dataKey="label" stroke={axisColor} style={{ fontSize: '12px' }} />
+          <YAxis yAxisId="matches" allowDecimals={false} stroke={axisColor} style={{ fontSize: '12px' }} />
+          {hasPoints && <YAxis yAxisId="points" orientation="right" stroke="#6366f1" style={{ fontSize: '12px' }} width={45} />}
+          <Tooltip
             contentStyle={{
               backgroundColor: isDark ? '#1f2937' : '#fff',
               color: isDark ? '#f3f4f6' : '#111827',
@@ -144,33 +152,24 @@ export default function ProgressionGraph() {
               borderRadius: '8px',
               padding: '12px',
             }}
-            formatter={(value) => value ? value : '-'}
           />
-          <Legend 
-            wrapperStyle={{ paddingTop: '20px' }}
-            iconType="line"
-          />
-          <Line
-            type="monotone"
-            dataKey="badminton"
-            stroke="#f97316"
-            dot={{ fill: '#f97316', r: 4 }}
-            activeDot={{ r: 6 }}
-            strokeWidth={2}
-            name="🏸 Badminton"
-            isAnimationActive={true}
-          />
-          <Line
-            type="monotone"
-            dataKey="chess"
-            stroke="#8b5cf6"
-            dot={{ fill: '#8b5cf6', r: 4 }}
-            activeDot={{ r: 6 }}
-            strokeWidth={2}
-            name="♟️ Échecs"
-            isAnimationActive={true}
-          />
-        </LineChart>
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Bar yAxisId="matches" dataKey="wins" name="Victoires" stackId="m" fill="#22c55e" />
+          {hasDraws && <Bar yAxisId="matches" dataKey="draws" name="Nulles" stackId="m" fill="#9ca3af" />}
+          <Bar yAxisId="matches" dataKey="losses" name="Défaites" stackId="m" fill="#ef4444" />
+          {hasPoints && (
+            <Line
+              yAxisId="points"
+              type="monotone"
+              dataKey="points"
+              name="Points (cumul)"
+              stroke="#6366f1"
+              strokeWidth={2}
+              dot={{ fill: '#6366f1', r: 4 }}
+              connectNulls
+            />
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

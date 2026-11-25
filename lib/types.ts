@@ -47,6 +47,8 @@ export interface PlayerProfile {
   season_objective?: string; // Ex: Atteindre N1, Améliorer sa moyenne
   current_ranking?: string; // Classement actuel (ex: N2, 1500, etc)
   target_ranking?: string; // Classement visé (ex: R6)
+  chess_current_ranking?: string; // Elo actuel aux échecs
+  chess_target_ranking?: string; // Elo visé aux échecs
   key_strengths?: string[]; // Points forts majeurs
   key_weaknesses?: string[]; // Points faibles majeurs
   improvement_focus?: string[]; // Domaines prioritaires pour la progression

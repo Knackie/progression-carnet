@@ -322,6 +322,12 @@ export default function ProfilePage() {
               <p className="text-lg opacity-90">Renseignez votre classement dans votre profil.</p>
             </>
           )}
+          {profile.chess_current_ranking && (
+            <p className="text-xl font-semibold mt-4">
+              ♟️ Elo : <span className="font-black">{profile.chess_current_ranking}</span>
+              {profile.chess_target_ranking && <> · Objectif : <span className="font-black">{profile.chess_target_ranking}</span></>}
+            </p>
+          )}
           {stats && stats.total > 0 && (
             <p className="text-lg opacity-90 mt-4">
               Forme : <span className="font-bold">{stats.winRate}%</span> de victoires sur <span className="font-bold">{stats.total}</span> matchs

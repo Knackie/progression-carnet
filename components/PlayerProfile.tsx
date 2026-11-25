@@ -5,7 +5,7 @@ import { Sport, PlayerProfile as SavedProfile } from '@/lib/types';
 import { authFetch } from '@/lib/authFetch';
 import { padToThree } from '@/lib/form';
 import { exampleForSports, playStyleExample, seasonGoalExample } from '@/lib/sportExamples';
-import { BADMINTON_RANKS } from '@/lib/rankings';
+import { BADMINTON_RANKS, CHESS_ELO_SUGGESTIONS } from '@/lib/rankings';
 
 interface PlayerProfileData {
   id?: string;
@@ -18,6 +18,8 @@ interface PlayerProfileData {
   season_objective?: string;
   current_ranking?: string;
   target_ranking?: string;
+  chess_current_ranking?: string;
+  chess_target_ranking?: string;
   key_strengths?: string[];
   key_weaknesses?: string[];
   improvement_focus?: string[];
@@ -129,6 +131,8 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
           ...formData,
           // Omitted when empty (works before the column exists), null to clear a saved one
           target_ranking: formData.target_ranking?.trim().toUpperCase() || (profile?.target_ranking ? null : undefined),
+          chess_current_ranking: formData.chess_current_ranking?.trim() || (profile?.chess_current_ranking ? null : undefined),
+          chess_target_ranking: formData.chess_target_ranking?.trim() || (profile?.chess_target_ranking ? null : undefined),
           key_strengths: formData.key_strengths?.filter(s => s.trim()),
           key_weaknesses: formData.key_weaknesses?.filter(w => w.trim()),
           improvement_focus: formData.improvement_focus?.filter(f => f.trim()),
@@ -308,9 +312,10 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
               />
             </div>
 
+            {(formData.sports.length === 0 || formData.sports.includes('badminton')) && (
             <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200 grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-indigo-900 mb-2">Classement actuel</label>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">🏸 Classement actuel</label>
                 <input
                   type="text"
                   name="current_ranking"
@@ -318,7 +323,7 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                   value={formData.current_ranking || ''}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="Ex: P11, ou 1500 Elo"
+                  placeholder="Ex: P11"
                 />
               </div>
               <div>
@@ -339,6 +344,43 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
                 ))}
               </datalist>
             </div>
+            )}
+
+            {formData.sports.includes('chess') && (
+            <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl p-6 border-2 border-violet-200 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-violet-900 mb-2">♟️ Elo actuel</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="chess_current_ranking"
+                  list="chess-elos"
+                  value={formData.chess_current_ranking || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-violet-300 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                  placeholder="Ex: 1500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-violet-900 mb-2">🎯 Elo visé</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="chess_target_ranking"
+                  list="chess-elos"
+                  value={formData.chess_target_ranking || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-violet-300 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                  placeholder="Ex: 1700"
+                />
+              </div>
+              <datalist id="chess-elos">
+                {CHESS_ELO_SUGGESTIONS.map(elo => (
+                  <option key={elo} value={elo} />
+                ))}
+              </datalist>
+            </div>
+            )}
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
               <h4 className="text-lg font-bold text-green-900 mb-4">💪 3 Points Forts Majeurs</h4>
@@ -471,6 +513,13 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
         <div className="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-200">
           <p className="text-sm font-semibold text-indigo-900 mb-1">🏆 Classement Actuel</p>
           <p className="text-indigo-800 font-bold text-lg">{profile.current_ranking}</p>
+        </div>
+      )}
+
+      {profile?.chess_current_ranking && (
+        <div className="bg-violet-50 rounded-lg p-4 mb-4 border border-violet-200">
+          <p className="text-sm font-semibold text-violet-900 mb-1">♟️ Elo Actuel</p>
+          <p className="text-violet-800 font-bold text-lg">{profile.chess_current_ranking}</p>
         </div>
       )}
 

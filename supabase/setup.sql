@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS player_profiles (
 ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS sports TEXT[] DEFAULT ARRAY[]::TEXT[];
 ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS current_ranking VARCHAR(100);
 ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS target_ranking VARCHAR(20);
+ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS chess_current_ranking VARCHAR(20);
+ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS chess_target_ranking VARCHAR(20);
 
 UPDATE player_profiles
 SET sports = ARRAY[sport]::TEXT[]

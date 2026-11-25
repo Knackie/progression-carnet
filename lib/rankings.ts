@@ -53,6 +53,15 @@ export function rankPath(current: string, target: string): string[] {
   return BADMINTON_RANKS.slice(from, to + 1);
 }
 
+export const CHESS_ELO_SUGGESTIONS = [800, 1000, 1200, 1400, 1600, 1800, 2000, 2200];
+
+// Finds an Elo rating in free text, e.g. "1500 Elo" -> 1500.
+export function findElo(text?: string | null): number | null {
+  const match = text?.match(/\b(\d{3,4})\b/);
+  const elo = match ? Number(match[1]) : null;
+  return elo != null && elo >= 100 && elo <= 3500 ? elo : null;
+}
+
 // "R6" -> "R" (series letter), "NC" -> "NC"
 export function rankSeries(rank?: string | null): string | null {
   if (!rank) return null;
