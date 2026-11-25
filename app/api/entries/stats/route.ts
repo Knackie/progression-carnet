@@ -22,17 +22,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Récupérer toutes les entrées de l'utilisateur
-    const { data: entries, error } = await supabase
+    // Upcoming (planned) matches have no result yet: leave them out of the stats
+    const { data: allEntries, error } = await supabase
       .from('progression_entries')
-      .select('score, match_result, entry_type')
+      .select('*')
       .eq('user_id', user.id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (!entries || entries.length === 0) {
+    const entries = (allEntries ?? []).filter(e => e.status !== 'planned');
+
+    if (entries.length === 0) {
       return NextResponse.json({
         total: 0,
         wins: 0,

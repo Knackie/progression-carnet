@@ -29,6 +29,13 @@ ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS match_result VARCHAR(20
   CHECK (match_result IN ('win', 'loss', 'draw'));
 -- Badminton: [[moi, adversaire], ...] par set, ex. [[15,12],[13,15],[15,10]]
 ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS set_scores JSONB;
+-- Préparation de match : 'planned' = match à venir, 'done' = séance terminée
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'done'
+  CHECK (status IN ('planned', 'done'));
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS opponent_name TEXT;
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS game_plan TEXT;
+-- [{"text": "Servir court", "achieved": true}, ...] (achieved = null tant que non évalué)
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS match_goals JSONB;
 
 CREATE INDEX IF NOT EXISTS progression_entries_user_id_idx ON progression_entries(user_id);
 CREATE INDEX IF NOT EXISTS progression_entries_user_sport_date_idx ON progression_entries(user_id, sport, date DESC);
@@ -55,6 +62,7 @@ CREATE TABLE IF NOT EXISTS player_profiles (
 
 ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS sports TEXT[] DEFAULT ARRAY[]::TEXT[];
 ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS current_ranking VARCHAR(100);
+ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS target_ranking VARCHAR(20);
 
 UPDATE player_profiles
 SET sports = ARRAY[sport]::TEXT[]

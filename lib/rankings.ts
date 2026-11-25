@@ -38,3 +38,25 @@ export function nextBadmintonRank(rank: string): string | null {
   if (index === -1 || index === BADMINTON_RANKS.length - 1) return null;
   return BADMINTON_RANKS[index + 1];
 }
+
+// Finds a ranking in free text, e.g. "Atteindre R6 cette saison" -> "R6".
+export function findBadmintonRank(text?: string | null): string | null {
+  const match = text?.toUpperCase().match(/\b(NC|[PDRN]\d{1,2})\b/);
+  return match && BADMINTON_RANKS.includes(match[1]) ? match[1] : null;
+}
+
+// Ranks from current to target, both included. Empty if target isn't above current.
+export function rankPath(current: string, target: string): string[] {
+  const from = BADMINTON_RANKS.indexOf(current);
+  const to = BADMINTON_RANKS.indexOf(target);
+  if (from === -1 || to === -1 || to <= from) return [];
+  return BADMINTON_RANKS.slice(from, to + 1);
+}
+
+// "R6" -> "R" (series letter), "NC" -> "NC"
+export function rankSeries(rank?: string | null): string | null {
+  if (!rank) return null;
+  const v = rank.trim().toUpperCase();
+  if (v === 'NC') return 'NC';
+  return ['P', 'D', 'R', 'N'].includes(v[0]) ? v[0] : null;
+}

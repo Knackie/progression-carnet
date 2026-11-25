@@ -5,6 +5,23 @@ import EditEntryModal from './EditEntryModal';
 import { legacyLevelLabel } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
 import { SetScore, formatSets } from '@/lib/badmintonScore';
+import { EntryStatus, MatchGoal } from '@/lib/matchPrep';
+
+const formatDate = (date: string, opts: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' }) =>
+  new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', opts);
+
+function GoalsList({ goals }: { goals: MatchGoal[] }) {
+  return (
+    <ul className="space-y-1">
+      {goals.map((g, i) => (
+        <li key={i} className="text-sm text-gray-700 flex gap-2">
+          <span>{g.achieved === true ? '✅' : g.achieved === false ? '❌' : '•'}</span>
+          <span>{g.text}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 interface Entry {
   id: string;
@@ -15,6 +32,10 @@ interface Entry {
   opponent_level?: string | null;
   match_result?: 'win' | 'loss' | 'draw' | null;
   set_scores?: SetScore[] | null;
+  status?: EntryStatus | null;
+  opponent_name?: string | null;
+  game_plan?: string | null;
+  match_goals?: MatchGoal[] | null;
   notes: string;
   strengths: string[];
   weaknesses: string[];
@@ -28,6 +49,7 @@ export default function EntriesList() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -58,6 +80,35 @@ export default function EntriesList() {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Phone: native share sheet (Instagram, WhatsApp…). Desktop: download.
+  const handleExport = async (entry: Entry) => {
+    try {
+      setExportingId(entry.id);
+      const response = await authFetch(`/api/entries/${entry.id}/card`);
+      if (!response.ok) throw new Error("Impossible de générer l'image");
+      const blob = await response.blob();
+      const fileName = `carnet-${entry.sport}-${entry.date}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Carnet de Progression' });
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // Closing the share sheet is not an error
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      alert(err instanceof Error ? err.message : "Erreur lors de l'export");
+    } finally {
+      setExportingId(null);
     }
   };
 
@@ -126,11 +177,61 @@ export default function EntriesList() {
     );
   }
 
+  const planned = entries
+    .filter(e => e.status === 'planned')
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const done = entries.filter(e => e.status !== 'planned');
+
   return (
     <div className="space-y-4">
-      <h3 className="text-xl sm:text-2xl font-bold text-gray-800">📋 Vos Entrées ({entries.length})</h3>
+      {planned.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-800">📋 Matchs à venir ({planned.length})</h3>
+          {planned.map(entry => (
+            <div key={entry.id} className="bg-white rounded-xl shadow-lg p-4 sm:p-5 border-l-4 border-indigo-500">
+              <div className="flex justify-between items-start gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800">
+                    {entry.sport === 'badminton' ? '🏸' : '♟️'} {formatDate(entry.date)}
+                  </p>
+                  {(entry.opponent_name || entry.opponent_level) && (
+                    <p className="text-sm text-gray-600">
+                      vs {entry.opponent_name}{entry.opponent_name && entry.opponent_level ? ' · ' : ''}
+                      {entry.opponent_level && legacyLevelLabel(entry.opponent_level)}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDelete(entry.id)}
+                  disabled={deletingId === entry.id}
+                  className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:opacity-50 shrink-0"
+                  title="Supprimer la préparation"
+                >
+                  {deletingId === entry.id ? '...' : '🗑️'}
+                </button>
+              </div>
+              {entry.game_plan && (
+                <p className="mt-3 text-sm text-gray-700 bg-indigo-50 rounded-lg p-3 whitespace-pre-line">🧠 {entry.game_plan}</p>
+              )}
+              {entry.match_goals && entry.match_goals.length > 0 && (
+                <div className="mt-3">
+                  <GoalsList goals={entry.match_goals} />
+                </div>
+              )}
+              <button
+                onClick={() => setEditingId(entry.id)}
+                className="mt-4 w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold"
+              >
+                ✅ Match joué : faire le bilan
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-800">📋 Vos Entrées ({done.length})</h3>
       <div className="grid gap-4">
-        {(showAll ? entries : entries.slice(0, 10)).map((entry) => (
+        {(showAll ? done : done.slice(0, 10)).map((entry) => (
           <div
             key={entry.id}
             className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition border-l-4 border-blue-500"
@@ -148,18 +249,14 @@ export default function EntriesList() {
                   <span className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
                     {entry.entry_type === 'match' ? '🎯 Match' : '🏋️ Entraînement'}
                   </span>
-                  {entry.entry_type === 'match' && entry.opponent_level && (
+                  {entry.entry_type === 'match' && (entry.opponent_level || entry.opponent_name) && (
                     <span className="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                      vs {legacyLevelLabel(entry.opponent_level)}
+                      vs {[entry.opponent_name, entry.opponent_level && legacyLevelLabel(entry.opponent_level)].filter(Boolean).join(' · ')}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-gray-500">
-                  📅 {new Date(`${entry.date}T00:00:00`).toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  📅 {formatDate(entry.date)}
                 </p>
                 {entry.set_scores && entry.set_scores.length > 0 && (
                   <p className="mt-1 font-mono font-bold text-gray-800 tracking-wide">
@@ -193,6 +290,14 @@ export default function EntriesList() {
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   <button
+                    onClick={() => handleExport(entry)}
+                    disabled={exportingId === entry.id}
+                    className="px-3 py-2 bg-purple-500 text-white text-sm font-semibold rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
+                    title="Exporter en image"
+                  >
+                    {exportingId === entry.id ? '...' : '📤'}
+                  </button>
+                  <button
                     onClick={() => setEditingId(entry.id)}
                     className="px-3 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition"
                     title="Éditer cette entrée"
@@ -216,6 +321,22 @@ export default function EntriesList() {
               <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-sm font-semibold text-gray-700 mb-1">📝 Impressions</p>
                 <p className="text-gray-700">{entry.notes}</p>
+              </div>
+            )}
+
+            {/* Pre-match plan, reviewed */}
+            {(entry.game_plan || (entry.match_goals && entry.match_goals.length > 0)) && (
+              <div className="mb-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <p className="text-sm font-semibold text-indigo-700 mb-2">
+                  📋 Préparation
+                  {entry.match_goals && entry.match_goals.length > 0 && (
+                    <span className="ml-2 font-normal">
+                      ({entry.match_goals.filter(g => g.achieved).length}/{entry.match_goals.length} objectifs atteints)
+                    </span>
+                  )}
+                </p>
+                {entry.game_plan && <p className="text-sm text-gray-700 mb-2 whitespace-pre-line">🧠 {entry.game_plan}</p>}
+                {entry.match_goals && entry.match_goals.length > 0 && <GoalsList goals={entry.match_goals} />}
               </div>
             )}
 
@@ -261,12 +382,12 @@ export default function EntriesList() {
         ))}
       </div>
 
-      {entries.length > 10 && (
+      {done.length > 10 && (
         <button
           onClick={() => setShowAll(prev => !prev)}
           className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
         >
-          {showAll ? 'Afficher moins' : `Voir les ${entries.length - 10} entrées plus anciennes`}
+          {showAll ? 'Afficher moins' : `Voir les ${done.length - 10} entrées plus anciennes`}
         </button>
       )}
 

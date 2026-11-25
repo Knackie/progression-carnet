@@ -41,7 +41,7 @@ export default function ProgressionGraph() {
       }
 
       const result = await response.json();
-      const entries: Entry[] = result.data || [];
+      const entries: Entry[] = (result.data || []).filter((e: { status?: string }) => e.status !== 'planned');
 
       // Group by date and calculate average score
       const grouped: { [key: string]: { badminton: number[]; chess: number[] } } = {};

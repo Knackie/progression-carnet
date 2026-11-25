@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSetScores } from '@/lib/badmintonScore';
+import { prepFields } from '@/lib/matchPrep';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { sport, date, entry_type, notes, score, opponent_level, match_result, strengths, weaknesses, improvement_axes } = body;
     const { sets: set_scores, error: setsError } = validateSetScores(body.set_scores);
-    if (setsError) {
-      return NextResponse.json({ error: setsError }, { status: 400 });
+    const { fields: prep, error: prepError } = prepFields(body, false);
+    if (setsError || prepError) {
+      return NextResponse.json({ error: setsError || prepError }, { status: 400 });
     }
 
     // Get auth header
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
           match_result: match_result || null,
           // Only sent when filled, so saving still works before the column is created
           ...(set_scores ? { set_scores } : {}),
+          ...prep,
           strengths: strengths || [],
           weaknesses: weaknesses || [],
           errors: [],

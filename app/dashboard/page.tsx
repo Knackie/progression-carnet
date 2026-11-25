@@ -8,6 +8,11 @@ import EntriesList from '@/components/EntriesList';
 import ProgressionGraph from '@/components/ProgressionGraph';
 import { useTheme } from '@/lib/ThemeContext';
 import Logo from '@/components/Logo';
+import PrepareMatchModal from '@/components/PrepareMatchModal';
+import GoalCard from '@/components/GoalCard';
+
+const tileClass =
+  'bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-3 sm:p-4 hover:shadow-xl transition flex flex-col items-center text-center gap-1 dark:border dark:border-gray-700';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +21,7 @@ export default function DashboardPage() {
   const { isDark, toggleTheme } = useTheme();
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [preparing, setPreparing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -139,26 +145,32 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Main action first, then shortcuts */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
-          <div className="col-span-2">
-            <QuickEntryForm onEntryCreated={handleEntryCreated} />
+        <div className="space-y-3 mb-8 sm:mb-12">
+          <QuickEntryForm onEntryCreated={handleEntryCreated} />
+
+          <div className="grid grid-cols-3 gap-3">
+            <button onClick={() => setPreparing(true)} className={tileClass}>
+              <span className="text-2xl sm:text-3xl">📋</span>
+              <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Préparer</span>
+              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">un match à venir</span>
+            </button>
+            <Link href="/dashboard/analysis" className={tileClass}>
+              <span className="text-2xl sm:text-3xl">📊</span>
+              <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Analyse</span>
+              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Points récurrents</span>
+            </Link>
+            <Link href="/profile" className={tileClass}>
+              <span className="text-2xl sm:text-3xl">👤</span>
+              <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Profil</span>
+              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Classement, objectif</span>
+            </Link>
           </div>
+        </div>
 
-          <Link href="/dashboard/analysis" className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-4 hover:shadow-xl transition flex items-center gap-3 dark:border dark:border-gray-700">
-            <span className="text-3xl">📊</span>
-            <span>
-              <span className="block font-bold text-gray-800 dark:text-white">Analyse</span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">Points récurrents</span>
-            </span>
-          </Link>
+        {preparing && <PrepareMatchModal onClose={() => setPreparing(false)} onCreated={handleEntryCreated} />}
 
-          <Link href="/profile" className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-4 hover:shadow-xl transition flex items-center gap-3 dark:border dark:border-gray-700">
-            <span className="text-3xl">👤</span>
-            <span>
-              <span className="block font-bold text-gray-800 dark:text-white">Profil</span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">Classement, objectif</span>
-            </span>
-          </Link>
+        <div className="mb-8">
+          <GoalCard key={refreshTrigger} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">

@@ -16,6 +16,7 @@ interface PlayerProfileData {
   playing_style?: string;
   season_objective?: string;
   current_ranking?: string;
+  target_ranking?: string;
   key_strengths?: string[];
   key_weaknesses?: string[];
   improvement_focus?: string[];
@@ -125,6 +126,8 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          // Omitted when empty (works before the column exists), null to clear a saved one
+          target_ranking: formData.target_ranking?.trim().toUpperCase() || (profile?.target_ranking ? null : undefined),
           key_strengths: formData.key_strengths?.filter(s => s.trim()),
           key_weaknesses: formData.key_weaknesses?.filter(w => w.trim()),
           improvement_focus: formData.improvement_focus?.filter(f => f.trim()),
@@ -304,17 +307,31 @@ export default function PlayerProfile({ startEditing = false, onSaved, onClose }
               />
             </div>
 
-            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200">
-              <label className="block text-sm font-bold text-indigo-900 mb-2">Classement Actuel</label>
-              <input
-                type="text"
-                name="current_ranking"
-                list="badminton-ranks"
-                value={formData.current_ranking || ''}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Ex: P10, D8, R6… ou 1500 Elo aux échecs"
-              />
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">Classement actuel</label>
+                <input
+                  type="text"
+                  name="current_ranking"
+                  list="badminton-ranks"
+                  value={formData.current_ranking || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Ex: P11, ou 1500 Elo"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">🎯 Classement visé</label>
+                <input
+                  type="text"
+                  name="target_ranking"
+                  list="badminton-ranks"
+                  value={formData.target_ranking || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-indigo-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Ex: R6"
+                />
+              </div>
               <datalist id="badminton-ranks">
                 {BADMINTON_RANKS.map(rank => (
                   <option key={rank} value={rank} />

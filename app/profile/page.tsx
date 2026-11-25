@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Logo from '@/components/Logo';
 import PlayerProfile from '@/components/PlayerProfile';
 import { PlayerProfile as PlayerProfileType } from '@/lib/types';
-import { nextBadmintonRank } from '@/lib/rankings';
+import { findBadmintonRank, nextBadmintonRank } from '@/lib/rankings';
 import { authFetch, SessionExpiredError } from '@/lib/authFetch';
 
 interface MatchStats {
@@ -118,6 +118,7 @@ export default function ProfilePage() {
   const sportEmoji = sports.map(s => (s === 'badminton' ? '🏸' : '♟️')).join(' ') || '🏅';
   const sportLabel = sports.map(s => (s === 'badminton' ? 'Badminton' : 'Échecs')).join(', ') || 'Aucun sport';
   const nextRank = profile.current_ranking ? nextBadmintonRank(profile.current_ranking) : null;
+  const targetRank = findBadmintonRank(profile.target_ranking);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 md:p-8">
@@ -306,6 +307,9 @@ export default function ProfilePage() {
               {nextRank && (
                 <p className="text-xl font-semibold">
                   Prochain palier : <span className="font-black">{nextRank}</span>
+                  {targetRank && targetRank !== nextRank && (
+                    <> · Objectif : <span className="font-black">{targetRank}</span></>
+                  )}
                 </p>
               )}
               {profile.season_objective && (

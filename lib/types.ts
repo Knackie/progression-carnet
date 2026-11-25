@@ -46,6 +46,7 @@ export interface PlayerProfile {
   playing_style?: string; // Ex: Agressif, Défensif, Équilibré
   season_objective?: string; // Ex: Atteindre N1, Améliorer sa moyenne
   current_ranking?: string; // Classement actuel (ex: N2, 1500, etc)
+  target_ranking?: string; // Classement visé (ex: R6)
   key_strengths?: string[]; // Points forts majeurs
   key_weaknesses?: string[]; // Points faibles majeurs
   improvement_focus?: string[]; // Domaines prioritaires pour la progression

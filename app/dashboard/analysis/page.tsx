@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { authFetch, SessionExpiredError } from '@/lib/authFetch';
 import { SetScore } from '@/lib/badmintonScore';
+import { rankSeries } from '@/lib/rankings';
 
 type Sport = 'badminton' | 'chess';
 type SportFilter = 'all' | Sport;
@@ -38,13 +39,7 @@ const SERIES = [
 ];
 
 // "R6" -> "R", "NC" -> "NC", legacy "R" -> "R"
-function seriesOf(level?: string | null): string | null {
-  if (!level) return null;
-  const v = level.trim().toUpperCase();
-  if (v === 'NC') return 'NC';
-  const letter = v[0];
-  return ['P', 'D', 'R', 'N'].includes(letter) ? letter : null;
-}
+const seriesOf = rankSeries;
 
 // Groups "Revers", "revers " and "REVERS" together; shows the first spelling seen.
 // An item counts at most once per entry.
@@ -85,7 +80,7 @@ export default function AnalysisPage() {
       const response = await authFetch('/api/entries');
       if (!response.ok) throw new Error('Erreur lors du chargement');
       const result = await response.json();
-      setEntries(result.data || []);
+      setEntries((result.data || []).filter((e: { status?: string }) => e.status !== 'planned'));
     } catch (err) {
       if (err instanceof SessionExpiredError) {
         router.replace('/auth/login');

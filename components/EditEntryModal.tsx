@@ -7,6 +7,7 @@ import { authFetch } from '@/lib/authFetch';
 import { padToThree } from '@/lib/form';
 import { SetInput, SetScore, matchWinner, parseSets, toSetInputs } from '@/lib/badmintonScore';
 import SetScoresInput from './SetScoresInput';
+import { EntryStatus, MatchGoal } from '@/lib/matchPrep';
 
 interface EditEntryModalProps {
   entry: {
@@ -18,6 +19,10 @@ interface EditEntryModalProps {
     opponent_level?: string | null;
     match_result?: 'win' | 'loss' | 'draw' | null;
     set_scores?: SetScore[] | null;
+    status?: EntryStatus | null;
+    opponent_name?: string | null;
+    game_plan?: string | null;
+    match_goals?: MatchGoal[] | null;
     notes: string;
     strengths: string[];
     weaknesses: string[];
@@ -61,6 +66,10 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   const [opponentLevel, setOpponentLevel] = useState(entry.opponent_level || '');
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>(entry.match_result || 'win');
   const [setInputs, setSetInputs] = useState<SetInput[]>(toSetInputs(entry.set_scores));
+  const isPlanned = entry.status === 'planned';
+  const [opponentName, setOpponentName] = useState(entry.opponent_name || '');
+  const [gamePlan, setGamePlan] = useState(entry.game_plan || '');
+  const [goals, setGoals] = useState<MatchGoal[]>(entry.match_goals ?? []);
   const [notes, setNotes] = useState(entry.notes);
   const [strengths, setStrengths] = useState<string[]>(padToThree(entry.strengths));
   const [weaknesses, setWeaknesses] = useState<string[]>(padToThree(entry.weaknesses));
@@ -78,6 +87,9 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
       setOpponentLevel(entry.opponent_level || '');
       setMatchResult(entry.match_result || 'win');
       setSetInputs(toSetInputs(entry.set_scores));
+      setOpponentName(entry.opponent_name || '');
+      setGamePlan(entry.game_plan || '');
+      setGoals(entry.match_goals ?? []);
       setNotes(entry.notes);
       setStrengths(padToThree(entry.strengths));
       setWeaknesses(padToThree(entry.weaknesses));
@@ -92,6 +104,17 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
     setSetInputs(value);
     const winner = matchWinner(parseSets(value).sets);
     if (winner) setMatchResult(winner);
+  };
+
+  // Send prep fields only when they hold or held something, so editing still
+  // works on a database without these columns.
+  const prepPayload = () => {
+    const payload: Record<string, unknown> = {};
+    if (isPlanned) payload.status = 'done';
+    if (opponentName.trim() || entry.opponent_name) payload.opponent_name = opponentName;
+    if (gamePlan.trim() || entry.game_plan) payload.game_plan = gamePlan;
+    if (goals.length || entry.match_goals?.length) payload.match_goals = goals;
+    return payload;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,6 +146,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
           ...setScoresField,
+          ...prepPayload(),
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -151,7 +175,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 flex justify-between items-center sticky top-0 z-10">
           <div>
-            <h3 className="text-3xl font-black">✏️ Éditer l'Entrée</h3>
+            <h3 className="text-3xl font-black">{isPlanned ? '✅ Bilan du match' : '✏️ Éditer l\'Entrée'}</h3>
             <p className="text-blue-100 text-sm mt-1">Mettez à jour votre entrée</p>
           </div>
           <button
@@ -287,6 +311,62 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                   )}
                 </select>
               </div>
+            </div>
+          )}
+
+          {/* Pre-match plan and goal review */}
+          {entryType === 'match' && (isPlanned || gamePlan || goals.length > 0 || opponentName) && (
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200 space-y-4">
+              <h4 className="text-lg font-bold text-indigo-900">📋 Préparation</h4>
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">Adversaire</label>
+                <input
+                  type="text"
+                  value={opponentName}
+                  onChange={e => setOpponentName(e.target.value)}
+                  placeholder="Nom (optionnel)"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-indigo-300 bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-indigo-900 mb-2">🧠 Plan de jeu</label>
+                <textarea
+                  value={gamePlan}
+                  onChange={e => setGamePlan(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-indigo-300 bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              {goals.length > 0 && (
+                <div>
+                  <p className="text-sm font-bold text-indigo-900 mb-2">🎯 Objectifs atteints ?</p>
+                  <div className="space-y-2">
+                    {goals.map((goal, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-white rounded-lg p-2 border border-indigo-200">
+                        <span className="flex-1 text-sm text-gray-800">{goal.text}</span>
+                        {([true, false] as const).map(value => (
+                          <button
+                            key={String(value)}
+                            type="button"
+                            onClick={() =>
+                              setGoals(goals.map((g, j) => (j === i ? { ...g, achieved: g.achieved === value ? null : value } : g)))
+                            }
+                            className={`px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition ${
+                              goal.achieved === value
+                                ? value
+                                  ? 'bg-green-500 border-green-500 text-white'
+                                  : 'bg-red-500 border-red-500 text-white'
+                                : 'border-gray-300 text-gray-600'
+                            }`}
+                          >
+                            {value ? '✅ Atteint' : '❌ Raté'}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
