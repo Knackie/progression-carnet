@@ -31,12 +31,18 @@ export function prepFields(body: Record<string, unknown>, onlyPresent: boolean) 
 
   const status: EntryStatus = body.status === 'planned' ? 'planned' : 'done';
   const text = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null);
+  const points = Number(body.points_delta);
+  const pointsDelta =
+    body.points_delta === '' || body.points_delta == null || !Number.isFinite(points)
+      ? null
+      : Math.max(-500, Math.min(500, Math.round(points)));
 
   const all: Record<string, unknown> = {
     status,
     opponent_name: text(body.opponent_name, 100),
     game_plan: text(body.game_plan, 2000),
     match_goals: goals,
+    points_delta: pointsDelta,
   };
 
   const fields: Record<string, unknown> = {};

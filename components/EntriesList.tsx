@@ -6,6 +6,7 @@ import { legacyLevelLabel } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
 import { SetScore, formatSets } from '@/lib/badmintonScore';
 import { EntryStatus, MatchGoal } from '@/lib/matchPrep';
+import { formatPoints } from '@/lib/ffbadPoints';
 
 const formatDate = (date: string, opts: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' }) =>
   new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', opts);
@@ -36,6 +37,7 @@ interface Entry {
   opponent_name?: string | null;
   game_plan?: string | null;
   match_goals?: MatchGoal[] | null;
+  points_delta?: number | null;
   notes: string;
   strengths: string[];
   weaknesses: string[];
@@ -285,6 +287,18 @@ export default function EntriesList() {
                     {entry.match_result === 'win' && '🎉 Victoire'}
                     {entry.match_result === 'loss' && '😔 Défaite'}
                     {entry.match_result === 'draw' && '🤝 Nulle'}
+                  </div>
+                )}
+                {entry.points_delta != null && (
+                  <div
+                    className={`text-sm font-black rounded-lg px-2 py-1 ${
+                      entry.points_delta >= 0
+                        ? 'text-green-700 bg-green-50 dark:bg-green-500/15 dark:text-green-300'
+                        : 'text-red-700 bg-red-50 dark:bg-red-500/15 dark:text-red-300'
+                    }`}
+                    title="Points de classement FFBaD"
+                  >
+                    {formatPoints(entry.points_delta)} pts
                   </div>
                 )}
                 {/* Action Buttons */}

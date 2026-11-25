@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import QuickEntryForm from '@/components/QuickEntryForm';
+import QuickEntryForm, { EntryPrefill } from '@/components/QuickEntryForm';
 import EntriesList from '@/components/EntriesList';
 import ProgressionGraph from '@/components/ProgressionGraph';
 import { useTheme } from '@/lib/ThemeContext';
@@ -22,6 +22,22 @@ export default function DashboardPage() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [preparing, setPreparing] = useState(false);
+  const [prefill, setPrefill] = useState<EntryPrefill | null>(null);
+
+  // Coming from the points calculator: /dashboard?result=win&points=32&note=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('result');
+    if (result !== 'win' && result !== 'loss') return;
+    const points = Number(params.get('points'));
+    setPrefill({
+      sport: 'badminton',
+      matchResult: result,
+      pointsDelta: Number.isFinite(points) ? points : undefined,
+      notes: params.get('note') ?? undefined,
+    });
+    window.history.replaceState(null, '', '/dashboard');
+  }, []);
   const router = useRouter();
 
   useEffect(() => {
@@ -146,14 +162,19 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Main action first, then shortcuts */}
         <div className="space-y-3 mb-8 sm:mb-12">
-          <QuickEntryForm onEntryCreated={handleEntryCreated} />
+          <QuickEntryForm key={prefill ? 'prefilled' : 'empty'} prefill={prefill} onEntryCreated={handleEntryCreated} />
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             <button onClick={() => setPreparing(true)} className={tileClass}>
               <span className="text-2xl sm:text-3xl">📋</span>
               <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Préparer</span>
               <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">un match à venir</span>
             </button>
+            <Link href="/dashboard/calculator" className={tileClass}>
+              <span className="text-2xl sm:text-3xl">🧮</span>
+              <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Calcul</span>
+              <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">points FFBaD</span>
+            </Link>
             <Link href="/dashboard/analysis" className={tileClass}>
               <span className="text-2xl sm:text-3xl">📊</span>
               <span className="font-bold text-sm sm:text-base text-gray-800 dark:text-white">Analyse</span>

@@ -6,9 +6,19 @@ import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
 import { EMPTY_SETS, SetInput, matchWinner, parseSets } from '@/lib/badmintonScore';
 import SetScoresInput from './SetScoresInput';
+import PointsDeltaInput, { parsePointsDelta } from './PointsDeltaInput';
+
+export interface EntryPrefill {
+  sport?: Sport;
+  date?: string;
+  matchResult?: 'win' | 'loss';
+  pointsDelta?: number;
+  notes?: string;
+}
 
 interface QuickEntryFormProps {
   onEntryCreated?: () => void;
+  prefill?: EntryPrefill | null;
 }
 
 const SPORTS: { value: Sport; label: string; emoji: string }[] = [
@@ -16,16 +26,18 @@ const SPORTS: { value: Sport; label: string; emoji: string }[] = [
   { value: 'chess', label: 'Échecs', emoji: '♟️' },
 ];
 
-export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedSport, setSelectedSport] = useState<Sport>('badminton');
+export default function QuickEntryForm({ onEntryCreated, prefill }: QuickEntryFormProps) {
+  // A prefill (from the points calculator) opens the form directly as a badminton match
+  const [isOpen, setIsOpen] = useState(!!prefill);
+  const [selectedSport, setSelectedSport] = useState<Sport>(prefill?.sport ?? 'badminton');
   const [entryType, setEntryType] = useState<'match' | 'training'>('match');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(prefill?.date ?? new Date().toISOString().split('T')[0]);
   const [score, setScore] = useState('5');
   const [opponentLevel, setOpponentLevel] = useState('');
-  const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>('win');
+  const [matchResult, setMatchResult] = useState<'win' | 'loss' | 'draw'>(prefill?.matchResult ?? 'win');
   const [setInputs, setSetInputs] = useState<SetInput[]>(EMPTY_SETS);
-  const [notes, setNotes] = useState('');
+  const [pointsDelta, setPointsDelta] = useState(prefill?.pointsDelta != null ? String(prefill.pointsDelta) : '');
+  const [notes, setNotes] = useState(prefill?.notes ?? '');
   const [strengths, setStrengths] = useState(['', '', '']);
   const [weaknesses, setWeaknesses] = useState(['', '', '']);
   const [axes, setAxes] = useState(['', '', '']);
@@ -67,6 +79,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
           opponent_level: entryType === 'match' ? opponentLevel : null,
           match_result: entryType === 'match' ? matchResult : null,
           set_scores: parsed.sets.length ? parsed.sets : null,
+          points_delta: isBadmintonMatch ? parsePointsDelta(pointsDelta) : null,
           strengths: strengths.filter(s => s.trim()),
           weaknesses: weaknesses.filter(w => w.trim()),
           improvement_axes: axes.filter(a => a.trim()),
@@ -85,6 +98,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
       setOpponentLevel('');
       setMatchResult('win');
       setSetInputs(EMPTY_SETS);
+      setPointsDelta('');
       setStrengths(['', '', '']);
       setWeaknesses(['', '', '']);
       setAxes(['', '', '']);
@@ -244,6 +258,7 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
                         <option value="loss">😔 Défaite</option>
                       </select>
                     </div>
+                    <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} />
                   </>
                 ) : (
                   <>

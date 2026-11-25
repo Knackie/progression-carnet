@@ -36,6 +36,8 @@ ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS opponent_name TEXT;
 ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS game_plan TEXT;
 -- [{"text": "Servir court", "achieved": true}, ...] (achieved = null tant que non évalué)
 ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS match_goals JSONB;
+-- Points de classement FFBaD gagnés (+) ou perdus (-) sur le match
+ALTER TABLE progression_entries ADD COLUMN IF NOT EXISTS points_delta INTEGER;
 
 CREATE INDEX IF NOT EXISTS progression_entries_user_id_idx ON progression_entries(user_id);
 CREATE INDEX IF NOT EXISTS progression_entries_user_sport_date_idx ON progression_entries(user_id, sport, date DESC);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { authFetch } from '@/lib/authFetch';
 import { findBadmintonRank, rankPath, rankSeries } from '@/lib/rankings';
 import { SetScore } from '@/lib/badmintonScore';
+import { formatPoints } from '@/lib/ffbadPoints';
 
 interface GoalEntry {
   sport: 'badminton' | 'chess';
@@ -15,6 +16,7 @@ interface GoalEntry {
   match_result?: 'win' | 'loss' | 'draw' | null;
   set_scores?: SetScore[] | null;
   weaknesses?: string[];
+  points_delta?: number | null;
 }
 
 interface Profile {
@@ -82,6 +84,8 @@ export default function GoalCard() {
   const vsTargetWins = vsTarget.filter(e => e.match_result === 'win').length;
   const sets = matches.flatMap(e => e.set_scores ?? []);
   const setsWon = sets.filter(([me, opp]) => me > opp).length;
+  const withPoints = matches.filter(e => e.points_delta != null);
+  const monthPoints = withPoints.reduce((sum, e) => sum + (e.points_delta ?? 0), 0);
 
   const weaknessCounts = new Map<string, { label: string; count: number }>();
   month.forEach(e =>
@@ -134,7 +138,11 @@ export default function GoalCard() {
             hint={vsTarget.length ? `${pct(vsTargetWins, vsTarget.length)}%` : 'aucun match'}
           />
           <Stat label="Sets gagnés" value={sets.length ? `${pct(setsWon, sets.length)}%` : '–'} hint={`${setsWon}/${sets.length}`} />
-          <Stat label="Séances" value={String(month.length)} hint={`${month.length - matches.length} entraînement${month.length - matches.length > 1 ? 's' : ''}`} />
+          {withPoints.length > 0 ? (
+            <Stat label="Points" value={formatPoints(monthPoints)} hint={`sur ${withPoints.length} match${withPoints.length > 1 ? 's' : ''}`} />
+          ) : (
+            <Stat label="Séances" value={String(month.length)} hint={`${month.length - matches.length} entraînement${month.length - matches.length > 1 ? 's' : ''}`} />
+          )}
         </div>
       )}
       {topWeakness && topWeakness.count > 1 && (

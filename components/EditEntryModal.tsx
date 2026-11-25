@@ -8,6 +8,7 @@ import { padToThree } from '@/lib/form';
 import { SetInput, SetScore, matchWinner, parseSets, toSetInputs } from '@/lib/badmintonScore';
 import SetScoresInput from './SetScoresInput';
 import { EntryStatus, MatchGoal } from '@/lib/matchPrep';
+import PointsDeltaInput, { parsePointsDelta } from './PointsDeltaInput';
 
 interface EditEntryModalProps {
   entry: {
@@ -23,6 +24,7 @@ interface EditEntryModalProps {
     opponent_name?: string | null;
     game_plan?: string | null;
     match_goals?: MatchGoal[] | null;
+    points_delta?: number | null;
     notes: string;
     strengths: string[];
     weaknesses: string[];
@@ -70,6 +72,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
   const [opponentName, setOpponentName] = useState(entry.opponent_name || '');
   const [gamePlan, setGamePlan] = useState(entry.game_plan || '');
   const [goals, setGoals] = useState<MatchGoal[]>(entry.match_goals ?? []);
+  const [pointsDelta, setPointsDelta] = useState(entry.points_delta != null ? String(entry.points_delta) : '');
   const [notes, setNotes] = useState(entry.notes);
   const [strengths, setStrengths] = useState<string[]>(padToThree(entry.strengths));
   const [weaknesses, setWeaknesses] = useState<string[]>(padToThree(entry.weaknesses));
@@ -90,6 +93,7 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
       setOpponentName(entry.opponent_name || '');
       setGamePlan(entry.game_plan || '');
       setGoals(entry.match_goals ?? []);
+      setPointsDelta(entry.points_delta != null ? String(entry.points_delta) : '');
       setNotes(entry.notes);
       setStrengths(padToThree(entry.strengths));
       setWeaknesses(padToThree(entry.weaknesses));
@@ -114,6 +118,8 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
     if (opponentName.trim() || entry.opponent_name) payload.opponent_name = opponentName;
     if (gamePlan.trim() || entry.game_plan) payload.game_plan = gamePlan;
     if (goals.length || entry.match_goals?.length) payload.match_goals = goals;
+    const points = isBadmintonMatch ? parsePointsDelta(pointsDelta) : null;
+    if (points != null || entry.points_delta != null) payload.points_delta = points;
     return payload;
   };
 
@@ -311,6 +317,11 @@ export default function EditEntryModal({ entry, isOpen, onClose, onSave }: EditE
                   )}
                 </select>
               </div>
+              {isBadmintonMatch && (
+                <div className="mt-4">
+                  <PointsDeltaInput value={pointsDelta} onChange={setPointsDelta} />
+                </div>
+              )}
             </div>
           )}
 
