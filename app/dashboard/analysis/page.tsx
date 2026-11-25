@@ -47,13 +47,16 @@ function seriesOf(level?: string | null): string | null {
 }
 
 // Groups "Revers", "revers " and "REVERS" together; shows the first spelling seen.
+// An item counts at most once per entry.
 function topItems(lists: string[][], limit = 5): Ranked[] {
   const counts = new Map<string, Ranked>();
   for (const list of lists) {
+    const seen = new Set<string>();
     for (const raw of list ?? []) {
       const label = raw.trim();
-      if (!label) continue;
       const key = label.toLowerCase();
+      if (!label || seen.has(key)) continue;
+      seen.add(key);
       const item = counts.get(key) ?? { label, count: 0 };
       item.count += 1;
       counts.set(key, item);
@@ -61,6 +64,8 @@ function topItems(lists: string[][], limit = 5): Ranked[] {
   }
   return [...counts.values()].sort((a, b) => b.count - a.count).slice(0, limit);
 }
+
+const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`;
 
 function winRate(wins: number, total: number) {
   return total > 0 ? Math.round((wins / total) * 100) : 0;
@@ -189,7 +194,7 @@ export default function AnalysisPage() {
         {!loading && !error && analysis.total > 0 && (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
-              <StatCard icon="📝" label="Séances" value={analysis.total} hint={`${analysis.matches} matchs · ${analysis.trainings} entraînements`} />
+              <StatCard icon="📝" label="Séances" value={analysis.total} hint={`${plural(analysis.matches, 'match')} · ${plural(analysis.trainings, 'entraînement')}`} />
               <StatCard icon="⭐" label="Note moyenne" value={analysis.avgScore != null ? `${analysis.avgScore}/10` : '–'} />
               <StatCard
                 icon="🏆"
