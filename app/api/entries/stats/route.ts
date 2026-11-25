@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
 
     // Vérifier l'authentification
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Récupérer toutes les entrées de l'utilisateur
     const { data: entries, error } = await supabase
-      .from('entries')
+      .from('progression_entries')
       .select('score, match_result, entry_type')
       .eq('user_id', user.id);
 
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     // Calculer les statistiques
     const matches = entries.filter(e => e.entry_type === 'match');
-    const scores = entries.filter(e => e.score).map(e => e.score);
+    const scores = entries.filter(e => e.score != null).map(e => e.score);
 
     const wins = matches.filter(m => m.match_result === 'win').length;
     const losses = matches.filter(m => m.match_result === 'loss').length;

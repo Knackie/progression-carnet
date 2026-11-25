@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Sport } from '@/lib/types';
+import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS } from '@/lib/rankings';
 
 interface QuickEntryFormProps {
   onEntryCreated?: () => void;
@@ -260,20 +261,17 @@ export default function QuickEntryForm({ onEntryCreated }: QuickEntryFormProps) 
                   className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
                   <option value="">-- Sélectionner --</option>
-                  {selectedSport === 'badminton' ? (
-                    <>
-                      <option value="P">🟩 P (Poussin)</option>
-                      <option value="D">🟨 D (Division)</option>
-                      <option value="R">🟧 R (Régional)</option>
-                      <option value="N">🟥 N (National)</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="debutant">🟩 Débutant</option>
-                      <option value="intermediaire">🟨 Intermédiaire</option>
-                      <option value="avance">🟥 Avancé</option>
-                    </>
-                  )}
+                  {selectedSport === 'badminton'
+                    ? BADMINTON_RANKING_GROUPS.map(group => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.ranks.map(rank => (
+                            <option key={rank} value={rank}>{rank}</option>
+                          ))}
+                        </optgroup>
+                      ))
+                    : CHESS_LEVELS.map(level => (
+                        <option key={level.value} value={level.value}>{level.label}</option>
+                      ))}
                 </select>
               </div>
             </div>
