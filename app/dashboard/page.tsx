@@ -189,6 +189,12 @@ export default function DashboardPage() {
               <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Classement, objectif</span>
             </Link>
           </div>
+          <Link
+            href="/confidentialite"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+          >
+            🔒 Politique de confidentialité
+          </Link>
         </div>
 
         {preparing && <PrepareMatchModal onClose={() => setPreparing(false)} onCreated={handleEntryCreated} />}

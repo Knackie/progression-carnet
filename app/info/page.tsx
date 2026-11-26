@@ -210,6 +210,9 @@ export default function InfoPage() {
             <p className="text-white/80">
               © 2026 Carnet de Progression. Tous droits réservés.
             </p>
+            <Link href="/confidentialite" className="inline-block mt-4 text-white underline hover:text-white/80">
+              Politique de confidentialité
+            </Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Sport } from '@/lib/types';
 import { BADMINTON_RANKING_GROUPS, CHESS_LEVELS } from '@/lib/rankings';
 import { authFetch } from '@/lib/authFetch';
@@ -110,6 +111,12 @@ export default function PrepareMatchModal({ onClose, onCreated }: PrepareMatchMo
                 placeholder="Nom (optionnel)"
                 className={inputClass}
               />
+              <p className="text-xs text-gray-600 mt-1">
+                Facultatif. Voir la{' '}
+                <Link href="/confidentialite" className="text-indigo-700 underline" target="_blank" rel="noopener noreferrer">
+                  confidentialité
+                </Link>.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Classement</label>

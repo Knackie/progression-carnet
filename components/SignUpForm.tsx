@@ -125,6 +125,13 @@ export default function SignUpForm() {
 
       <GoogleButton label="S'inscrire avec Google" />
 
+      <p className="text-center text-sm text-gray-600">
+        Consultez notre{' '}
+        <Link href="/confidentialite" className="text-blue-600 hover:underline">
+          politique de confidentialité
+        </Link>.
+      </p>
+
       {/* Login Link */}
       <p className="text-center text-gray-700">
         Vous avez déjà un compte ?{' '}

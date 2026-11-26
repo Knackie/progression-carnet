@@ -205,6 +205,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 text-center text-blue-100">
           <p className="mb-4">© 2026 Carnet de Progression. Tous droits réservés.</p>
           <p className="text-sm">Créé avec ❤️ pour les passionnés de badminton et d'échecs</p>
+          <Link href="/confidentialite" className="inline-block mt-4 text-sm underline hover:text-white">
+            Politique de confidentialité
+          </Link>
         </div>
       </footer>
     </main>
